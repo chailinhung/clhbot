@@ -15,18 +15,11 @@
     <div class="loader"></div>
     <script>
         const LIFF_ID = '2010205613-GBhWoaIf'; 
-        const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzhUln6Pkz83tH0tgZo43QNqbDutANsa0Jzrov-qspv5Zk-nJG8s_nc1_XirMW8pZsTxw/exec';
 
         async function init() {
-            // 設定 5 秒強制跳轉定時器 (Timeout)
-            const timeoutPromise = new Promise((resolve) => {
-                setTimeout(() => {
-                    console.log('LIFF Timeout: Redirecting with default name...');
-                    resolve({ isTimeout: true });
-                }, 5000);
-            });
+            // 5 秒強制超時保護
+            const timeoutPromise = new Promise(resolve => setTimeout(() => resolve({ userName: "" }), 5000));
 
-            // LIFF 處理邏輯
             const liffPromise = (async () => {
                 try {
                     await liff.init({ liffId: LIFF_ID });
@@ -58,11 +51,22 @@
 
             if (result && result.waitLogin) return; // 如果正在跳轉登入，則不執行後續
 
+            // ── 🌐 核心優化：解析當前網址參數，直接在 GitHub 本地完成跳轉 ──
             const urlParams = new URLSearchParams(window.location.search);
             const finalName = result.userName || "";
-            urlParams.set('uName', finalName);
-            
-            window.location.replace(GAS_WEB_APP_URL + '?' + urlParams.toString());
+            urlParams.set('uName', finalName); // 填入拿到的名字
+
+            const action = urlParams.get('action') || '';
+            const typeParam = (urlParams.get('type') || '').toUpperCase();
+
+            // 🎯 根據參數判斷該去正餐還是飲料頁面
+            let targetPage = "order_ui.html"; // 預設去正餐 UI
+            if (action === "order_drink_ui" || typeParam === "DRINK") {
+                targetPage = "order_drink_ui.html"; // 去飲料 UI
+            }
+
+            // 🚀 直接在 GitHub 本地轉向目的地，不再繞回 GAS！
+            window.location.replace(targetPage + '?' + urlParams.toString());
         }
         window.onload = init;
     </script>
