@@ -82,12 +82,13 @@
   <script>
     // 🌟 【請替換】請貼入你自己 Firebase 專案的 Config 設定值
     const firebaseConfig = {
-      apiKey: "YOUR_API_KEY",
-      authDomain: "YOUR_AUTH_DOMAIN",
-      projectId: "YOUR_PROJECT_ID",
-      storageBucket: "YOUR_STORAGE_BUCKET",
-      messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-      appId: "YOUR_APP_ID"
+      apiKey: "AIzaSyCExKi_r1hqwCdX-0lPAx73lb38zlXNYl0",
+      authDomain: "clhbot.firebaseapp.com",
+      projectId: "clhbot",
+      storageBucket: "clhbot.firebasestorage.app",
+      messagingSenderId: "607201536273",
+      appId: "1:607201536273:web:905d7dedc96a487765c4b0",
+      measurementId: "G-V25VHR10PJ"
     };
     
     // 初始化 Firebase
@@ -256,7 +257,7 @@
         // ── 🌟 背景非同步通知 GAS 發送 LINE 訊息 ──
         // 網頁不用等後端回應，直接重整，GAS 背景慢慢發通知，網頁絕對不會卡死！
         const summaryText = orderData.map(o => `${o.meal} x${o.qty}`).join(', ');
-        fetch('https://script.google.com/macros/s/你的GAS網頁應用程式部署ID/exec', {
+        fetch('https://script.google.com/macros/s/AKfycbzhUln6Pkz83tH0tgZo43QNqbDutANsa0Jzrov-qspv5Zk-nJG8s_nc1_XirMW8pZsTxw/exec', {
           method: 'POST',
           mode: 'no-cors',
           body: JSON.stringify({
