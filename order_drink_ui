@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>飲料訂餐</title>
+  <title>飲料點餐</title>
   <style>
     :root { --primary: #00b900; --bg: #f4f4f4; --text: #333; }
     body { font-family: sans-serif; padding: 5px; background: var(--bg); color: var(--text); font-size: 25px; margin: 0; }
@@ -12,192 +12,363 @@
     label { display: block; font-weight: 600; margin-bottom: 0; font-size: 1.625rem; }
     input[type="text"] { width: 100%; padding: 7.5px; border: 2.5px solid #ddd; border-radius: 5px; box-sizing: border-box; font-size: 1.875rem; }
     
-    .menu-item { display: flex; align-items: center; padding: 7.5px 0; border-bottom: 2.5px solid #f9f9f9; cursor: pointer; }
-    .item-info { flex: 1; min-width: 0; overflow: hidden; }
-    .item-name { font-weight: 600; font-size: 2rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .item-price { color: #666; font-size: 1.625rem; }
-    .btn-add { background: var(--primary); color: white; border: none; width: 45px; height: 45px; border-radius: 50%; font-size: 2rem; display: flex; align-items: center; justify-content: center; }
+    .menu-item { display: flex; align-items: center; padding: 7.5px 0; border-bottom: 2.5px solid #f9f9f9; font-size: 1.625rem; }
+    .menu-item:last-child { border-bottom: none; }
+    .item-info { flex: 1; }
+    .item-name { font-weight: bold; }
+    .item-price { color: #888; font-size: 1.375rem; }
+    .qty-ctrl { display: flex; align-items: center; gap: 7.5px; }
     
-    table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 1.75rem; table-layout: fixed; }
-    th, td { padding: 5px 2.5px; border-bottom: 2.5px solid #eee; overflow: hidden; }
-    th:nth-child(1), td:nth-child(1) { width: 5.5em; text-align: left; }
-    th:nth-child(2), td:nth-child(2) { text-align: left; }
-    th:nth-child(3), td:nth-child(3) { width: 2em; text-align: right; }
-    th:nth-child(4), td:nth-child(4) { width: 3em; text-align: right; }
-    th:nth-child(5), td:nth-child(5) { width: 3.5em; text-align: center; }
-    .btn-delete { background: #fcc; color: #a00; border: 2.5px solid #a00; padding: 0 10px; border-radius: 10px; font-size: 1.625rem; }
-    .btn-delete:disabled { background: #eee; border-color: #ccc; color: #999; }
-
-    /* 2倍大彈窗樣式 */
-    .large-swal { font-size: 2rem !important; width: 90% !important; }
-
-    .modal { display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); }
-    .modal-content { background-color: white; margin: 5% auto; padding: 25px; border-radius: 20px; width: 90%; max-width: 875px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
-    .modal-title { font-weight: 700; font-size: 2.125rem; margin-bottom: 15px; color: var(--primary); }
-    .option-group { margin-bottom: 15px; }
-    .option-label { font-size: 1.75rem; font-weight: 600; margin-bottom: 2.5px; }
-    .options { display: flex; flex-wrap: wrap; gap: 10px; }
-    .option-btn { background: #eee; border: 2.5px solid #ccc; padding: 7.5px 20px; border-radius: 30px; font-size: 1.875rem; }
-    .option-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
-    .modal-footer { display: flex; justify-content: flex-end; gap: 15px; margin-top: 25px; }
-    .btn-cancel { background: #eee; border: none; padding: 10px 30px; border-radius: 30px; font-size: 1.875rem; }
-    .btn-confirm { background: var(--primary); color: white; border: none; padding: 10px 30px; border-radius: 30px; font-size: 1.875rem; }
-    .btn-confirm:disabled { background: #999; cursor: not-allowed; }
+    .radio-group { display: flex; flex-wrap: wrap; gap: 7.5px; margin-top: 5px; }
+    .radio-btn { border: 2.5px solid #ddd; padding: 7.5px 12.5px; border-radius: 5px; cursor: pointer; font-size: 1.375rem; font-weight: bold; background: #fff; }
+    .radio-btn.active { border-color: var(--primary); color: var(--primary); background: #e6ffe6; }
+    
+    .custom-section { display: none; margin-top: 5px; padding-left: 10px; border-left: 4px solid var(--primary); }
+    
+    .btn-qty { background: #e0e0e0; border: none; font-size: 1.875rem; width: 45px; height: 45px; border-radius: 5px; cursor: pointer; display: flex; justify-content: center; align-items: center; font-weight: bold; }
+    .btn-qty:active { background: #ccc; }
+    .qty-val { width: 35px; text-align: center; font-weight: bold; display: inline-block; font-size: 1.75rem; }
+    
+    .btn-submit { background: var(--primary); color: white; border: none; width: 100%; padding: 12.5px; font-size: 2rem; border-radius: 5px; cursor: pointer; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.2); margin-top: 10px; }
+    .btn-submit:active { background: #009900; }
+    
+    table { width: 100%; border-collapse: collapse; margin-top: 5px; font-size: 1.5rem; }
+    th, td { border: 2px solid #ddd; padding: 6px; text-align: left; }
+    th { background-color: #f2f2f2; font-weight: bold; }
+    .btn-del { background: #ff4d4d; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 1.375rem; font-weight: bold; }
+    .btn-del:active { background: #cc0000; }
+    
+    .large-swal { font-size: 1.75rem !important; }
+    .large-swal .swal2-title { font-size: 2.25rem !important; }
+    .large-swal .swal2-content { font-size: 1.75rem !important; }
+    .large-swal .swal2-actions button { font-size: 1.75rem !important; padding: 10px 20px !important; }
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 </head>
 <body>
+
   <div class="card">
-    <h2 id="shop-title">🥤 載入中...</h2>
+    <h2 id="ui-title">飲料點餐</h2>
     <div class="input-group">
-      <label>訂購人姓名： (訂購明細在最下方）</label>
-      <input type="text" id="userName" value="" placeholder="請輸入名字" required>
-    </div>
-    <div id="menu-list">
-      <div style="text-align:center; padding:20px;">正在讀取菜單...</div>
+      <label>訂購人姓名：</label>
+      <input type="text" id="user-name" placeholder="請輸入您的暱稱" autocomplete="off">
     </div>
   </div>
 
   <div class="card">
-    <h2 style="font-size: 2.125rem;">📊 目前訂單明細</h2>
-    <table>
-      <thead><tr><th>人名</th><th>餐點</th><th>數</th><th>金額</th><th>操作</th></tr></thead>
-      <tbody id="history-body"><tr><td colspan="5">載入中...</td></tr></tbody>
-    </table>
+    <h2>飲料選單</h2>
+    <div id="menu-container">正在載入菜單...</div>
+    <button class="btn-submit" id="submit-btn" onclick="submitOrder()">送出訂單</button>
   </div>
 
-  <div id="customModal" class="modal">
-    <div class="modal-content">
-      <div id="modal-item-name" class="modal-title">品項名稱</div>
-      <div class="option-group">
-        <div class="option-label">甜度</div>
-        <div class="options" id="sugar-options">
-          <button class="option-btn" onclick="selectOption('sugar', '無糖')">無糖</button>
-          <button class="option-btn" onclick="selectOption('sugar', '1分')">1分</button>
-          <button class="option-btn" onclick="selectOption('sugar', '3分')">3分</button>
-          <button class="option-btn" onclick="selectOption('sugar', '微糖')">微糖</button>
-          <button class="option-btn active" onclick="selectOption('sugar', '半糖')">半糖</button>
-          <button class="option-btn" onclick="selectOption('sugar', '少糖')">少糖</button>
-          <button class="option-btn" onclick="selectOption('sugar', '全糖')">全糖</button>
-        </div>
-      </div>
-      <div class="option-group">
-        <div class="option-label">冰量</div>
-        <div class="options" id="ice-options">
-          <button class="option-btn" onclick="selectOption('ice', '去冰')">去冰</button>
-          <button class="option-btn active" onclick="selectOption('ice', '微冰')">微冰</button>
-          <button class="option-btn" onclick="selectOption('ice', '少冰')">少冰</button>
-          <button class="option-btn" onclick="selectOption('ice', '正常冰')">正常冰</button>
-          <button class="option-btn" onclick="selectOption('ice', '熱飲')">熱飲</button>
-        </div>
-      </div>
-      <div class="option-group">
-        <div class="option-label">備註</div>
-        <input type="text" id="custom-note" placeholder="+料,$要人工加，如:＋珍珠$5 或 不填" style="width:100%; padding:7.5px; border:2.5px solid #ddd; border-radius:5px; font-size:1.5rem;">
-      </div>
-      <div class="modal-footer">
-        <button class="btn-cancel" onclick="closeModal()">取消</button>
-        <button id="confirmBtn" class="btn-confirm" onclick="confirmCustom(event)">送出</button>
-      </div>
+  <div class="card">
+    <h2>今日已登記明細</h2>
+    <div style="overflow-x:auto;">
+      <table>
+        <thead>
+          <tr>
+            <th>訂購人</th>
+            <th>餐點名稱</th>
+            <th style="text-align:right;">數量</th>
+            <th style="text-align:right;">小計</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="history-body">
+          <tr><td colspan="5">正在載入歷史明細...</td></tr>
+        </tbody>
+      </table>
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script>
-    // 【恢復模板解析】確保在 iframe 中也能拿到參數
-    const shopName = "<?= shopName ?>";
-    const groupId = "<?= groupId ?>";
-    const sessionId = "<?= sessionId ?>";
-    const uNameParam = "<?= uName ?>";
+    // 🌟 【請貼入與 order_ui 一模一樣的 Firebase Config 設定值】
+    const firebaseConfig = {
+      apiKey: "AIzaSyCExKi_r1hqwCdX-0lPAx73lb38zlXNYl0",
+      authDomain: "clhbot.firebaseapp.com",
+      projectId: "clhbot",
+      storageBucket: "clhbot.firebasestorage.app",
+      messagingSenderId: "607201536273",
+      appId: "1:607201536273:web:905d7dedc96a487765c4b0",
+      measurementId: "G-V25VHR10PJ"
+    };
+    
+    // 初始化 Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
 
-    // 優化：直接從嵌入的資料讀取
-    let globalMenu = <?!= menuData ?>;
-    let currentItemIndex = -1, selectedSugar = "半糖", selectedIce = "微冰";
+    // ── 🌐 從網址 URL 解析 GAS 丟過來的路由參數 ──
+    const urlParams = new URLSearchParams(window.location.search);
+    const groupId = urlParams.get('gid') || '';
+    const sessionId = urlParams.get('sid') || '';
+    const shopName = urlParams.get('shop') || '';
+    const reqType = urlParams.get('type') || 'DRINK';
+    const uNameParam = urlParams.get('uName') || '';
+
+    let menuList = [];
+    const iceOptions = ["正常冰", "少冰", "微冰", "去冰", "熱"];
+    const sugarOptions = ["正常甜", "少糖", "半糖", "微糖", "無糖"];
+    const toppingOptions = ["不加料", "珍珠(+10)", "椰果(+10)", "仙草(+10)"];
 
     window.onload = function() {
-      if (shopName) document.getElementById('shop-title').innerText = "🥤 " + shopName + " (飲料)";
-      if (uNameParam) document.getElementById('userName').value = uNameParam;
+      document.title = "飲料點餐 - " + shopName;
+      document.getElementById('ui-title').innerText = shopName + " (飲料)";
       
-      // 直接渲染
-      renderMenu();
-      loadHistory();
+      if (uNameParam) {
+        document.getElementById('user-name').value = uNameParam;
+      }
+
+      loadMenuFromFirebase();
+      loadHistoryFromFirebase();
     };
 
-    function renderMenu() {
-      const list = document.getElementById('menu-list');
-      if (globalMenu.length === 0) {
-        list.innerHTML = '<div style="text-align:center; padding:20px;">此商店尚無菜單資料</div>';
+    // ── 📊 1. 撈取飲料菜單 ──
+    async function loadMenuFromFirebase() {
+      const container = document.getElementById('menu-container');
+      try {
+        const snapshot = await db.collection("shops")
+                               .where("商店名稱", "==", shopName)
+                               .where("類別", "==", "DRINK")
+                               .get();
+
+        if (snapshot.empty) {
+          container.innerHTML = "<p style='color:red;'>此商店目前無對應飲料菜單資料。</p>";
+          return;
+        }
+
+        menuList = [];
+        snapshot.forEach(doc => {
+          const d = doc.data();
+          menuList.push({ name: d["餐點名稱"], price: Number(d["價格"]) });
+        });
+
+        renderMenu(menuList);
+      } catch (err) {
+        console.error(err);
+        container.innerHTML = "<p style='color:red;'>無法從資料庫讀取飲料菜單。</p>";
+      }
+    }
+
+    function renderMenu(menu) {
+      if (menu.length === 0) {
+        document.getElementById('menu-container').innerHTML = '<p>本商店暫無飲料品項</p>';
         return;
       }
-      list.innerHTML = globalMenu.map((item, index) => `
-        <div class="menu-item" onclick="openCustomModal(${index})">
-          <div class="item-info">
-            <div class="item-name">${item.name}</div>
-            <div class="item-price">$${item.price}</div>
+      
+      let html = menu.map((item, idx) => {
+        let iceButtons = iceOptions.map((o, i) => `<button class="radio-btn ${i===0?'active':''}" onclick="setCustom(${idx},'ice',${i},'${o}')">${o}</button>`).join('');
+        let sugarButtons = sugarOptions.map((o, i) => `<button class="radio-btn ${i===0?'active':''}" onclick="setCustom(${idx},'sugar',${i},'${o}')">${o}</button>`).join('');
+        let toppingButtons = toppingOptions.map((o, i) => `<button class="radio-btn ${i===0?'active':''}" onclick="setCustom(${idx},'topping',${i},'${o}')">${o}</button>`).join('');
+        
+        return `
+          <div class="menu-item-block" style="border-bottom: 2.5px solid #f9f9f9; padding: 10px 0;">
+            <div class="menu-item">
+              <div class="item-info">
+                <div class="item-name">${item.name}</div>
+                <div class="item-price">$${item.price}</div>
+              </div>
+              <div class="qty-ctrl">
+                <button class="btn-qty" onclick="changeQty(${idx}, -1)">-</button>
+                <span class="qty-val" id="qty-${idx}">0</span>
+                <button class="btn-qty" onclick="changeQty(${idx}, 1)">+</button>
+              </div>
+            </div>
+            
+            <div class="custom-section" id="custom-${idx}">
+              <div style="font-size:1.25rem; font-weight:bold; margin-top:5px; color:#666;">冰塊</div>
+              <div class="radio-group" id="ice-group-${idx}">${iceButtons}</div>
+              <div style="font-size:1.25rem; font-weight:bold; margin-top:5px; color:#666;">甜度</div>
+              <div class="radio-group" id="sugar-group-${idx}">${sugarButtons}</div>
+              <div style="font-size:1.25rem; font-weight:bold; margin-top:5px; color:#666;">加料</div>
+              <div class="radio-group" id="topping-group-${idx}">${toppingButtons}</div>
+            </div>
           </div>
-          <div class="btn-add">+</div>
-        </div>
-      `).join('');
-    }
-
-    function openCustomModal(index) {
-      currentItemIndex = index;
-      document.getElementById('modal-item-name').innerText = globalMenu[index].name;
-      document.getElementById('custom-note').value = "";
-      document.getElementById('customModal').style.display = 'block';
-    }
-    function closeModal() { document.getElementById('customModal').style.display = 'none'; }
-    function selectOption(type, value) {
-      const containerId = type === 'sugar' ? 'sugar-options' : 'ice-options';
-      const btns = document.getElementById(containerId).getElementsByClassName('option-btn');
-      for (let btn of btns) { btn.classList.remove('active'); if (btn.innerText === value) btn.classList.add('active'); }
-      if (type === 'sugar') selectedSugar = value; else selectedIce = value;
-    }
-    function confirmCustom(event) {
-      const userName = document.getElementById('userName').value.trim();
-      if (!userName) { Swal.fire('請先輸入姓名！'); return; }
+        `;
+      }).join('');
       
-      const btn = document.getElementById('confirmBtn');
-      const originalText = btn.innerText;
-      btn.disabled = true;
-      btn.innerText = "處理中...";
-
-      const note = document.getElementById('custom-note').value.trim();
-      const customStr = note ? `[${selectedSugar}/${selectedIce}/${note}]` : `[${selectedSugar}/${selectedIce}]`;
-      const fullMealName = globalMenu[currentItemIndex].name + " " + customStr;
+      document.getElementById('menu-container').innerHTML = html;
       
-      Swal.fire({
-        title: '確認訂單',
-        html: `訂購人：${userName}<br>餐點：${fullMealName}<br>金額：$${globalMenu[currentItemIndex].price}`,
-        customClass: { popup: 'large-swal' },
-        showCancelButton: true,
-        confirmButtonText: '確定送出',
-        cancelButtonText: '取消'
-      }).then((result) => {
-        if (result.isConfirmed) {
-          const orderData = [{ name: fullMealName, price: globalMenu[currentItemIndex].price, qty: 1 }];
-          btn.innerText = "傳送中...";
-          
-          google.script.run
-            .withSuccessHandler(() => {
-              Swal.fire({ icon: 'success', title: '訂單已送出！', timer: 800 });
-              closeModal(); loadHistory();
-              btn.disabled = false;
-              btn.innerText = originalText;
-            })
-            .withFailureHandler(() => {
-               Swal.fire({ icon: 'error', title: '送出失敗，請再試一次' });
-               btn.disabled = false;
-               btn.innerText = originalText;
-            })
-            .processWebOrder({userName: userName, groupId, sessionId, orderData, type: 'DRINK'});
-        } else {
-          btn.disabled = false;
-          btn.innerText = originalText;
-        }
+      // 初始化選取狀態資料結構
+      menu.forEach((item, idx) => {
+        item.selectedIce = iceOptions[0];
+        item.selectedSugar = sugarOptions[0];
+        item.selectedTopping = toppingOptions[0];
       });
     }
 
-    function deleteOrder(btn, userName, mealName) {
+    function changeQty(idx, delta) {
+      const span = document.getElementById(`qty-${idx}`);
+      const cSection = document.getElementById(`custom-${idx}`);
+      let val = parseInt(span.innerText) + delta;
+      if (val < 0) val = 0;
+      span.innerText = val;
+      
+      if (val > 0) {
+        cSection.style.display = 'block';
+      } else {
+        cSection.style.display = 'none';
+        // 重設客製化按鈕為預設第一個值
+        setCustom(idx, 'ice', 0, iceOptions[0]);
+        setCustom(idx, 'sugar', 0, sugarOptions[0]);
+        setCustom(idx, 'topping', 0, toppingOptions[0]);
+      }
+    }
+
+    function setCustom(menuIdx, type, optIdx, val) {
+      menuList[menuIdx][type === 'ice' ? 'selectedIce' : type === 'sugar' ? 'selectedSugar' : 'selectedTopping'] = val;
+      const container = document.getElementById(`${type}-group-${menuIdx}`);
+      const buttons = container.getElementsByClassName('radio-btn');
+      for (let i = 0; i < buttons.length; i++) {
+        buttons[i].classList.remove('active');
+      }
+      buttons[optIdx].classList.add('active');
+    }
+
+    // ── 🚀 2. 送出飲料訂單 ──
+    async function submitOrder() {
+      const name = document.getElementById('user-name').value.trim();
+      const btn = document.getElementById('submit-btn');
+
+      if (!name) {
+        Swal.fire({ title: '提示', text: '請輸入訂購人姓名', icon: 'warning', customClass: { popup: 'large-swal' } });
+        return;
+      }
+
+      let orderData = [];
+      menuList.forEach((item, idx) => {
+        const qty = parseInt(document.getElementById(`qty-${idx}`).innerText);
+        if (qty > 0) {
+          // 計算最終金額 (加料 +10 元)
+          let finalPrice = item.price;
+          let toppingText = "";
+          if (item.selectedTopping !== "不加料") {
+            finalPrice += 10;
+            toppingText = `+${item.selectedTopping.split('(')[0]}`;
+          }
+          
+          // 組合完整餐點名稱字串，對齊原本的備註格式
+          const fullName = `${item.name} (${item.selectedIce}/${item.selectedSugar}${toppingText})`;
+          
+          orderData.push({
+            meal: fullName,
+            qty: qty,
+            totalPrice: finalPrice * qty
+          });
+        }
+      });
+
+      if (orderData.length === 0) {
+        Swal.fire({ title: '提示', text: '請至少選擇一杯飲料再送出', icon: 'warning', customClass: { popup: 'large-swal' } });
+        return;
+      }
+
+      btn.disabled = true;
+      const originalText = btn.innerText;
+      btn.innerText = "提交中...";
+
+      try {
+        const configRef = db.collection("Config").doc(groupId);
+        
+        await db.runTransaction(async (transaction) => {
+          const configDoc = await transaction.get(configRef);
+          
+          // 🔒 安全開團與 Session 檢查
+          if (!configDoc.exists || configDoc.data()["Status"] !== "ON") {
+            throw new Error("⚠️ 目前沒有進行中的訂餐或已結單。");
+          }
+          if (String(configDoc.data()["Time"]) !== String(sessionId)) {
+            throw new Error("⚠️ 此為舊訂餐階段網頁，請重新從 LINE 取得最新連結。");
+          }
+
+          // 寫入 Orders 集合
+          orderData.forEach(ord => {
+            const newOrderRef = db.collection("Orders").doc();
+            transaction.set(newOrderRef, {
+              "時間": new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' }),
+              "GroupID": groupId,
+              "訂購人": name,
+              "餐點名稱": ord.meal,
+              "金額": ord.totalPrice,
+              "類別": "DRINK",
+              "_session": sessionId
+            });
+          });
+        });
+
+        Swal.fire({ title: '成功', text: '飲料登記成功！', icon: 'success', customClass: { popup: 'large-swal' } });
+        
+        // ── 🌟 背景非同步通知 GAS ──
+        const summaryText = orderData.map(o => `${o.meal} x${o.qty}`).join(', ');
+        fetch('https://script.google.com/macros/s/AKfycbzhUln6Pkz83tH0tgZo43QNqbDutANsa0Jzrov-qspv5Zk-nJG8s_nc1_XirMW8pZsTxw/exec', {
+          method: 'POST',
+          mode: 'no-cors',
+          body: JSON.stringify({
+            action: "async_line_notify",
+            groupId: groupId,
+            userName: name,
+            summary: summaryText,
+            type: "DRINK"
+          })
+        });
+
+        // 重設點餐單
+        loadMenuFromFirebase();
+        loadHistoryFromFirebase();
+
+      } catch (err) {
+        Swal.fire({ title: '失敗', text: err.message, icon: 'error', customClass: { popup: 'large-swal' } });
+      } finally {
+        btn.disabled = false;
+        btn.innerText = originalText;
+      }
+    }
+
+    // ── 📋 3. 📋 載入當前群組歷史明細 ──
+    async function loadHistoryFromFirebase() {
+      const body = document.getElementById('history-body');
+      try {
+        const snapshot = await db.collection("Orders")
+                               .where("GroupID", "==", groupId)
+                               .where("_session", "==", sessionId)
+                               .get();
+
+        if (snapshot.empty) {
+          body.innerHTML = '<tr><td colspan="5">目前尚無人登記資料</td></tr>';
+          return;
+        }
+
+        let html = "";
+        snapshot.forEach(doc => {
+          const id = doc.id;
+          const r = doc.data();
+          html += `<tr>
+            <td>${r["訂購人"]}</td>
+            <td>${r["餐點名稱"]}</td>
+            <td style="text-align:right;">1</td>
+            <td style="text-align:right;">$${r["金額"]}</td>
+            <td style="text-align:center;">
+              <button class="btn-del" onclick="deleteOrder(this, '${id}', '${r["訂購人"]}', '${r["餐點名稱"]}')">刪除</button>
+            </td>
+          </tr>`;
+        });
+        body.innerHTML = html;
+      } catch (err) {
+        body.innerHTML = '<tr><td colspan="5" style="color:red;">載入明細失敗。</td></tr>';
+      }
+    }
+
+    // ── ❌ 4. 刪除訂單：安全規則會自動校驗「訂購人」 ──
+    function deleteOrder(btn, docId, userName, mealName) {
+      const currentInputName = document.getElementById('user-name').value.trim();
+      
+      if (currentInputName !== userName) {
+        Swal.fire({ title: '防禦提示', text: '您只能刪除自己在「訂購人姓名」所填寫的飲料！', icon: 'error', customClass: { popup: 'large-swal' } });
+        return;
+      }
+
       Swal.fire({
         title: '確認刪除',
         html: `確定要刪除 ${userName} 的 ${mealName} 嗎？`,
@@ -206,25 +377,22 @@
         showCancelButton: true,
         confirmButtonText: '刪除',
         cancelButtonText: '取消'
-      }).then((result) => {
+      }).then(async (result) => {
         if (result.isConfirmed) {
           btn.disabled = true;
-          btn.innerText = "刪除中...";
-          google.script.run
-            .withSuccessHandler(() => { loadHistory(); })
-            .withFailureHandler(() => { btn.disabled = false; btn.innerText = "刪除"; })
-            .deleteWebOrder(groupId, sessionId, userName, mealName, 'DRINK');
+          btn.innerText = "中...";
+          try {
+            await db.collection("Orders").doc(docId).delete();
+            Swal.fire({ title: '成功', text: '刪除成功！', icon: 'success', customClass: { popup: 'large-swal' } });
+            loadHistoryFromFirebase();
+          } catch (err) {
+            Swal.fire({ title: '失敗', text: '刪除失敗，無編輯權限！', icon: 'error', customClass: { popup: 'large-swal' } });
+          } finally {
+            btn.disabled = false;
+            btn.innerText = "刪除";
+          }
         }
       });
-    }
-    function loadHistory() {
-      google.script.run.withSuccessHandler(data => {
-        const body = document.getElementById('history-body');
-        body.innerHTML = data.length === 0 ? '<tr><td colspan="5">無資料</td></tr>' : data.map(r => `<tr>
-          <td>${r.user}</td><td>${r.meal}</td><td style="text-align:right;">${r.qty}</td><td style="text-align:right;">$${r.price * r.qty}</td>
-          <td><button class="btn-delete" onclick="deleteOrder(this, '${r.user}', '${r.meal}')">刪除</button></td>
-        </tr>`).join('');
-      }).getCurrentOrders(groupId, sessionId, 'DRINK');
     }
   </script>
 </body>
