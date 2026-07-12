@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>飲料訂餐</title>
+  <style>
+    :root { --primary: #00b900; --bg: #f4f4f4; --text: #333; }
+    body { font-family: sans-serif; padding: 5px; background: var(--bg); color: var(--text); font-size: 25px; margin: 0; }
+    .card { background: white; border-radius: 10px; padding: 10px; box-shadow: 0 2.5px 5px rgba(0,0,0,0.1); margin-bottom: 10px; }
+    h2 { color: var(--primary); text-align: center; margin: 0 0 10px 0; font-size: 2.125rem; }
+    .input-group { margin-bottom: 10px; }
+    label { display: block; font-weight: 600; margin-bottom: 0; font-size: 1.625rem; }
+    input[type="text"] { width: 100%; padding: 7.5px; border: 2.5px solid #ddd; border-radius: 5px; box-sizing: border-box; font-size: 1.875rem; }
+    
+    .menu-item { display: flex; align-items: center; padding: 7.5px 0; border-bottom: 2.5px solid #f9f9f9; cursor: pointer; }
+    .item-info { flex: 1; min-width: 0; overflow: hidden; }
+    .item-name { font-weight: 600; font-size: 2rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .item-price { color: #666; font-size: 1.625rem; }
+    .btn-add { background: var(--primary); color: white; border: none; width: 45px; height: 45px; border-radius: 50%; font-size: 2rem; display: flex; align-items: center; justify-content: center; }
+    
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 1.75rem; table-layout: fixed; }
+    th, td { padding: 5px 2.5px; border-bottom: 2.5px solid #eee; overflow: hidden; }
+    th:nth-child(1), td:nth-child(1) { width: 5.5em; text-align: left; }
+    th:nth-child(2), td:nth-child(2) { text-align: left; }
+    th:nth-child(3), td:nth-child(3) { width: 2em; text-align: right; }
+    th:nth-child(4), td:nth-child(4) { width: 3em; text-align: right; }
+    th:nth-child(5), td:nth-child(5) { width: 3.5em; text-align: center; }
+    .btn-delete { background: #fcc; color: #a00; border: 2.5px solid #a00; padding: 0 10px; border-radius: 10px; font-size: 1.625rem; }
+    .btn-delete:disabled { background: #eee; border-color: #ccc; color: #999; }
+
+    /* 2倍大彈窗樣式 */
+    .large-swal { font-size: 2rem !important; width: 90% !important; }
+
+    .modal { display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); }
+    .modal-content { background-color: white; margin: 5% auto; padding: 25px; border-radius: 20px; width: 90%; max-width: 875px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+    .modal-title { font-weight: 700; font-size: 2.125rem; margin-bottom: 15px; color: var(--primary); }
+    .option-group { margin-bottom: 15px; }
+    .option-label { font-size: 1.75rem; font-weight: 600; margin-bottom: 2.5px; }
+    .options { display: flex; flex-wrap: wrap; gap: 10px; }
+    .option-btn { background: #eee; border: 2.5px solid #ccc; padding: 7.5px 20px; border-radius: 30px; font-size: 1.875rem; }
+    .option-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+    .modal-footer { display: flex; justify-content: flex-end; gap: 15px; margin-top: 25px; }
+    .btn-cancel { background: #eee; border: none; padding: 10px 30px; border-radius: 30px; font-size: 1.875rem; }
+    .btn-confirm { background: var(--primary); color: white; border: none; padding: 10px 30px; border-radius: 30px; font-size: 1.875rem; }
+    .btn-confirm:disabled { background: #999; cursor: not-allowed; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2 id="shop-title">🥤 載入中...</h2>
+    <div class="input-group">
+      <label>訂購人姓名： (訂購明細在最下方）</label>
+      <input type="text" id="userName" value="" placeholder="請輸入名字" required>
+    </div>
+    <div id="menu-list">
+      <div style="text-align:center; padding:20px;">正在讀取菜單...</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2 style="font-size: 2.125rem;">📊 目前訂單明細</h2>
+    <table>
+      <thead><tr><th>人名</th><th>餐點</th><th>數</th><th>金額</th><th>操作</th></tr></thead>
+      <tbody id="history-body"><tr><td colspan="5">載入中...</td></tr></tbody>
+    </table>
+  </div>
+
+  <div id="customModal" class="modal">
+    <div class="modal-content">
+      <div id="modal-item-name" class="modal-title">品項名稱</div>
+      <div class="option-group">
+        <div class="option-label">甜度</div>
+        <div class="options" id="sugar-options">
+          <button class="option-btn" onclick="selectOption('sugar', '無糖')">無糖</button>
+          <button class="option-btn" onclick="selectOption('sugar', '1分')">1分</button>
+          <button class="option-btn" onclick="selectOption('sugar', '3分')">3分</button>
+          <button class="option-btn" onclick="selectOption('sugar', '微糖')">微糖</button>
+          <button class="option-btn active" onclick="selectOption('sugar', '半糖')">半糖</button>
+          <button class="option-btn" onclick="selectOption('sugar', '少糖')">少糖</button>
+          <button class="option-btn" onclick="selectOption('sugar', '全糖')">全糖</button>
+        </div>
+      </div>
+      <div class="option-group">
+        <div class="option-label">冰量</div>
+        <div class="options" id="ice-options">
+          <button class="option-btn" onclick="selectOption('ice', '去冰')">去冰</button>
+          <button class="option-btn active" onclick="selectOption('ice', '微冰')">微冰</button>
+          <button class="option-btn" onclick="selectOption('ice', '少冰')">少冰</button>
+          <button class="option-btn" onclick="selectOption('ice', '正常冰')">正常冰</button>
+          <button class="option-btn" onclick="selectOption('ice', '熱飲')">熱飲</button>
+        </div>
+      </div>
+      <div class="option-group">
+        <div class="option-label">備註</div>
+        <input type="text" id="custom-note" placeholder="+料,$要人工加，如:＋珍珠$5 或 不填" style="width:100%; padding:7.5px; border:2.5px solid #ddd; border-radius:5px; font-size:1.5rem;">
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" onclick="closeModal()">取消</button>
+        <button id="confirmBtn" class="btn-confirm" onclick="confirmCustom(event)">送出</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script>
+    // 【恢復模板解析】確保在 iframe 中也能拿到參數
+    const shopName = "<?= shopName ?>";
+    const groupId = "<?= groupId ?>";
+    const sessionId = "<?= sessionId ?>";
+    const uNameParam = "<?= uName ?>";
+
+    // 優化：直接從嵌入的資料讀取
+    let globalMenu = <?!= menuData ?>;
+    let currentItemIndex = -1, selectedSugar = "半糖", selectedIce = "微冰";
+
+    window.onload = function() {
+      if (shopName) document.getElementById('shop-title').innerText = "🥤 " + shopName + " (飲料)";
+      if (uNameParam) document.getElementById('userName').value = uNameParam;
+      
+      // 直接渲染
+      renderMenu();
+      loadHistory();
+    };
+
+    function renderMenu() {
+      const list = document.getElementById('menu-list');
+      if (globalMenu.length === 0) {
+        list.innerHTML = '<div style="text-align:center; padding:20px;">此商店尚無菜單資料</div>';
+        return;
+      }
+      list.innerHTML = globalMenu.map((item, index) => `
+        <div class="menu-item" onclick="openCustomModal(${index})">
+          <div class="item-info">
+            <div class="item-name">${item.name}</div>
+            <div class="item-price">$${item.price}</div>
+          </div>
+          <div class="btn-add">+</div>
+        </div>
+      `).join('');
+    }
+
+    function openCustomModal(index) {
+      currentItemIndex = index;
+      document.getElementById('modal-item-name').innerText = globalMenu[index].name;
+      document.getElementById('custom-note').value = "";
+      document.getElementById('customModal').style.display = 'block';
+    }
+    function closeModal() { document.getElementById('customModal').style.display = 'none'; }
+    function selectOption(type, value) {
+      const containerId = type === 'sugar' ? 'sugar-options' : 'ice-options';
+      const btns = document.getElementById(containerId).getElementsByClassName('option-btn');
+      for (let btn of btns) { btn.classList.remove('active'); if (btn.innerText === value) btn.classList.add('active'); }
+      if (type === 'sugar') selectedSugar = value; else selectedIce = value;
+    }
+    function confirmCustom(event) {
+      const userName = document.getElementById('userName').value.trim();
+      if (!userName) { Swal.fire('請先輸入姓名！'); return; }
+      
+      const btn = document.getElementById('confirmBtn');
+      const originalText = btn.innerText;
+      btn.disabled = true;
+      btn.innerText = "處理中...";
+
+      const note = document.getElementById('custom-note').value.trim();
+      const customStr = note ? `[${selectedSugar}/${selectedIce}/${note}]` : `[${selectedSugar}/${selectedIce}]`;
+      const fullMealName = globalMenu[currentItemIndex].name + " " + customStr;
+      
+      Swal.fire({
+        title: '確認訂單',
+        html: `訂購人：${userName}<br>餐點：${fullMealName}<br>金額：$${globalMenu[currentItemIndex].price}`,
+        customClass: { popup: 'large-swal' },
+        showCancelButton: true,
+        confirmButtonText: '確定送出',
+        cancelButtonText: '取消'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          const orderData = [{ name: fullMealName, price: globalMenu[currentItemIndex].price, qty: 1 }];
+          btn.innerText = "傳送中...";
+          
+          google.script.run
+            .withSuccessHandler(() => {
+              Swal.fire({ icon: 'success', title: '訂單已送出！', timer: 800 });
+              closeModal(); loadHistory();
+              btn.disabled = false;
+              btn.innerText = originalText;
+            })
+            .withFailureHandler(() => {
+               Swal.fire({ icon: 'error', title: '送出失敗，請再試一次' });
+               btn.disabled = false;
+               btn.innerText = originalText;
+            })
+            .processWebOrder({userName: userName, groupId, sessionId, orderData, type: 'DRINK'});
+        } else {
+          btn.disabled = false;
+          btn.innerText = originalText;
+        }
+      });
+    }
+
+    function deleteOrder(btn, userName, mealName) {
+      Swal.fire({
+        title: '確認刪除',
+        html: `確定要刪除 ${userName} 的 ${mealName} 嗎？`,
+        customClass: { popup: 'large-swal' },
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: '刪除',
+        cancelButtonText: '取消'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          btn.disabled = true;
+          btn.innerText = "刪除中...";
+          google.script.run
+            .withSuccessHandler(() => { loadHistory(); })
+            .withFailureHandler(() => { btn.disabled = false; btn.innerText = "刪除"; })
+            .deleteWebOrder(groupId, sessionId, userName, mealName, 'DRINK');
+        }
+      });
+    }
+    function loadHistory() {
+      google.script.run.withSuccessHandler(data => {
+        const body = document.getElementById('history-body');
+        body.innerHTML = data.length === 0 ? '<tr><td colspan="5">無資料</td></tr>' : data.map(r => `<tr>
+          <td>${r.user}</td><td>${r.meal}</td><td style="text-align:right;">${r.qty}</td><td style="text-align:right;">$${r.price * r.qty}</td>
+          <td><button class="btn-delete" onclick="deleteOrder(this, '${r.user}', '${r.meal}')">刪除</button></td>
+        </tr>`).join('');
+      }).getCurrentOrders(groupId, sessionId, 'DRINK');
+    }
+  </script>
+</body>
+</html>
