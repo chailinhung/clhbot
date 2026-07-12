@@ -12,179 +12,349 @@
     label { display: block; font-weight: 600; margin-bottom: 0; font-size: 1.625rem; }
     input[type="text"] { width: 100%; padding: 7.5px; border: 2.5px solid #ddd; border-radius: 5px; box-sizing: border-box; font-size: 1.875rem; }
     
-    .menu-item { display: flex; align-items: center; padding: 7.5px 0; border-bottom: 2.5px solid #f9f9f9; }
-    .item-info { flex: 1; min-width: 0; overflow: hidden; }
-    .item-name { font-weight: 600; font-size: 2rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .item-price { color: #666; font-size: 1.625rem; }
-    .qty-controls { display: flex; align-items: center; gap: 5px; }
-    .btn-qty { background: #eee; border: 2.5px solid #ccc; width: 50px; height: 50px; border-radius: 50%; font-size: 2rem; cursor: pointer; }
-    .qty-val { width: 50px; text-align: center; font-weight: bold; font-size: 2rem; }
+    .menu-item { display: flex; align-items: center; padding: 7.5px 0; border-bottom: 2.5px solid #f9f9f9; font-size: 1.625rem; }
+    .menu-item:last-child { border-bottom: none; }
+    .item-info { flex: 1; }
+    .item-name { font-weight: bold; }
+    .item-price { color: #888; font-size: 1.375rem; }
+    .qty-ctrl { display: flex; align-items: center; gap: 7.5px; }
+    .btn-qty { background: #e0e0e0; border: none; font-size: 1.875rem; width: 45px; height: 45px; border-radius: 5px; cursor: pointer; display: flex; justify-content: center; align-items: center; font-weight: bold; }
+    .btn-qty:active { background: #ccc; }
+    .qty-val { width: 35px; text-align: center; font-weight: bold; display: inline-block; font-size: 1.75rem; }
     
-    .btn-submit { background: var(--primary); color: white; border: none; padding: 12.5px; border-radius: 25px; font-size: 2rem; font-weight: 600; width: 100%; margin-top: 10px; }
-    .btn-submit:disabled { background: #999; }
+    .remark-input { width: 100%; padding: 5px; border: 2px solid #ddd; border-radius: 5px; font-size: 1.375rem; box-sizing: border-box; margin-top: 5px; display: none; }
     
-    table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 1.75rem; table-layout: fixed; }
-    th, td { padding: 5px 2.5px; border-bottom: 2.5px solid #eee; overflow: hidden; }
-    th:nth-child(1), td:nth-child(1) { width: 5.5em; text-align: left; }
-    th:nth-child(2), td:nth-child(2) { text-align: left; }
-    th:nth-child(3), td:nth-child(3) { width: 2em; text-align: right; }
-    th:nth-child(4), td:nth-child(4) { width: 3em; text-align: right; }
-    th:nth-child(5), td:nth-child(5) { width: 3.5em; text-align: center; }
-    .btn-delete { background: #fcc; color: #a00; border: 2.5px solid #a00; padding: 0 10px; border-radius: 10px; font-size: 1.625rem; }
-    .btn-delete:disabled { background: #eee; border-color: #ccc; color: #999; }
+    .btn-submit { background: var(--primary); color: white; border: none; width: 100%; padding: 12.5px; font-size: 2rem; border-radius: 5px; cursor: pointer; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.2); margin-top: 10px; }
+    .btn-submit:active { background: #009900; }
     
-    /* 2倍大彈窗樣式 */
-    .large-swal { font-size: 2rem !important; width: 90% !important; }
+    table { width: 100%; border-collapse: collapse; margin-top: 5px; font-size: 1.5rem; }
+    th, td { border: 2px solid #ddd; padding: 6px; text-align: left; }
+    th { background-color: #f2f2f2; font-weight: bold; }
+    .btn-del { background: #ff4d4d; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 1.375rem; font-weight: bold; }
+    .btn-del:active { background: #cc0000; }
+    
+    .large-swal { font-size: 1.75rem !important; }
+    .large-swal .swal2-title { font-size: 2.25rem !important; }
+    .large-swal .swal2-content { font-size: 1.75rem !important; }
+    .large-swal .swal2-actions button { font-size: 1.75rem !important; padding: 10px 20px !important; }
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 </head>
 <body>
+
   <div class="card">
-    <h2 id="shop-title">🏪 載入中...</h2>
+    <h2 id="ui-title">正餐點餐</h2>
     <div class="input-group">
-      <label>訂購人姓名： (訂購明細在最下方）</label>
-      <input type="text" id="userName" value="" placeholder="請輸入名字" required>
+      <label>訂購人姓名：</label>
+      <input type="text" id="user-name" placeholder="請輸入您的暱稱" autocomplete="off">
     </div>
-
-    <div id="menu-list">
-      <div style="text-align:center; padding:20px;">正在讀取菜單...</div>
-    </div>
-    <div style="margin-top:15px; font-size: 2.5rem; font-weight: bold; color: #d32f2f; text-align: right;">總計：$<span id="total-price">0</span></div>
-    <button type="button" id="submitBtn" class="btn-submit" onclick="submitForm()">送出訂單</button>
   </div>
 
   <div class="card">
-    <h2 style="font-size: 2.125rem;">📊 目前訂單明細</h2>
-    <table>
-      <thead><tr><th>人名</th><th>餐點</th><th>數</th><th>金額</th><th>操作</th></tr></thead>
-      <tbody id="history-body"><tr><td colspan="5">載入中...</td></tr></tbody>
-    </table>
+    <h2>餐點選單</h2>
+    <div id="menu-container">正在載入菜單...</div>
+    <button class="btn-submit" id="submit-btn" onclick="submitOrder()">送出訂單</button>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <script>
-    // 【恢復模板解析】確保在 iframe 中也能拿到參數
-    const shopName = "<?= shopName ?>";
-    const groupId = "<?= groupId ?>";
-    const sessionId = "<?= sessionId ?>";
-    const uName = "<?= uName ?>";
+  <div class="card">
+    <h2>今日已登記明細</h2>
+    <div style="overflow-x:auto;">
+      <table>
+        <thead>
+          <tr>
+            <th>訂購人</th>
+            <th>餐點名稱</th>
+            <th style="text-align:right;">數量</th>
+            <th style="text-align:right;">小計</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="history-body">
+          <tr><td colspan="5">正在載入歷史明細...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
 
-    // 優化：直接從嵌入的資料讀取，不需再透過 server call
-    let globalMenu = <?!= menuData ?>;
-    let quantities = [];
+  <script>
+    // 🌟 【請替換】請貼入你自己 Firebase 專案的 Config 設定值
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_AUTH_DOMAIN",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_STORAGE_BUCKET",
+      messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
+    
+    // 初始化 Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // ── 🌐 從網址 URL 解析 GAS 丟過來的路由參數 ──
+    const urlParams = new URLSearchParams(window.location.search);
+    const groupId = urlParams.get('gid') || '';
+    const sessionId = urlParams.get('sid') || '';
+    const shopName = urlParams.get('shop') || '';
+    const reqType = urlParams.get('type') || 'MEAL';
+    const uNameParam = urlParams.get('uName') || '';
+
+    let menuList = [];
 
     window.onload = function() {
-      if (shopName) document.getElementById('shop-title').innerText = "🏪 " + shopName;
-      if (uName) document.getElementById('userName').value = uName;
+      // 動態設定網頁標題
+      document.title = (reqType === "DRINK" ? "飲料" : "") + "訂餐 - " + shopName;
+      document.getElementById('ui-title').innerText = shopName + " (" + (reqType === "DRINK" ? "飲料" : "正餐") + ")";
       
-      // 直接渲染菜單
-      quantities = new Array(globalMenu.length).fill(0);
-      renderMenu();
-      loadHistory();
+      // 自動填入 LINE 傳過來的成員名稱
+      if (uNameParam) {
+        document.getElementById('user-name').value = uNameParam;
+      }
+
+      // 載入 Firebase 菜單與歷史紀錄
+      loadMenuFromFirebase();
+      loadHistoryFromFirebase();
     };
 
-    function renderMenu() {
-      const list = document.getElementById('menu-list');
-      if (globalMenu.length === 0) {
-        list.innerHTML = '<div style="text-align:center; padding:20px;">此商店尚無菜單資料</div>';
+    // ── 📊 1. 撈取菜單：取代原 template.menuData ──
+    async function loadMenuFromFirebase() {
+      const container = document.getElementById('menu-container');
+      try {
+        // 從正式版規則對齊的 shops 集合中撈取對應商店與類別的品項
+        const snapshot = await db.collection("shops")
+                               .where("商店名稱", "==", shopName)
+                               .where("類別", "==", reqType)
+                               .get();
+
+        if (snapshot.empty) {
+          container.innerHTML = "<p style='color:red;'>此商店目前無對應菜單資料。</p>";
+          return;
+        }
+
+        menuList = [];
+        snapshot.forEach(doc => {
+          const d = doc.data();
+          menuList.push({ name: d["餐點名稱"], price: Number(d["價格"]) });
+        });
+
+        // 渲染選單 HTML
+        renderMenu(menuList);
+      } catch (err) {
+        console.error(err);
+        container.innerHTML = "<p style='color:red;'>無法從資料庫讀取菜單。</p>";
+      }
+    }
+
+    function renderMenu(menu) {
+      const container = document.getElementById('menu-container');
+      if (menu.length === 0) {
+        container.innerHTML = '<p>本商店暫無餐點品項</p>';
         return;
       }
-      list.innerHTML = globalMenu.map((item, index) => `
-        <div class="menu-item">
+      container.innerHTML = menu.map((item, idx) => `
+        <div class="menu-item" data-name="${item.name}">
           <div class="item-info">
             <div class="item-name">${item.name}</div>
             <div class="item-price">$${item.price}</div>
+            <input type="text" class="remark-input" id="remark-${idx}" placeholder="備註(如:加辣、客製)" autocomplete="off">
           </div>
-          <div class="qty-controls">
-            <button class="btn-qty" onclick="changeQty(${index}, -1)">-</button>
-            <div class="qty-val" id="qty-${index}">0</div>
-            <button class="btn-qty" onclick="changeQty(${index}, 1)">+</button>
+          <div class="qty-ctrl">
+            <button class="btn-qty" onclick="changeQty(${idx}, -1)">-</button>
+            <span class="qty-val" id="qty-${idx}">0</span>
+            <button class="btn-qty" onclick="changeQty(${idx}, 1)">+</button>
           </div>
         </div>
       `).join('');
     }
 
-    function changeQty(index, delta) {
-      quantities[index] = Math.max(0, quantities[index] + delta);
-      document.getElementById('qty-' + index).innerText = quantities[index];
-      updateTotal();
+    function changeQty(idx, delta) {
+      const span = document.getElementById(`qty-${idx}`);
+      const rInput = document.getElementById(`remark-${idx}`);
+      let val = parseInt(span.innerText) + delta;
+      if (val < 0) val = 0;
+      span.innerText = val;
+      
+      // 當數量大於 0 時顯示備註欄位，0 則隱藏
+      if (val > 0) {
+        rInput.style.display = 'block';
+      } else {
+        rInput.style.display = 'none';
+        rInput.value = '';
+      }
     }
-    
-    function updateTotal() {
-      let total = 0;
-      quantities.forEach((qty, i) => { total += qty * globalMenu[i].price; });
-      document.getElementById('total-price').innerText = total;
-    }
-    
-    function submitForm() {
-      const name = document.getElementById('userName').value.trim();
-      if (!name) { Swal.fire('請先輸入姓名！'); return; }
-      const orderData = []; 
-      quantities.forEach((q, i) => { if(q>0) orderData.push({name: globalMenu[i].name, price: globalMenu[i].price, qty: q}); });
-      if (orderData.length === 0) { Swal.fire('請選擇餐點'); return; }
 
-      let summaryText = orderData.map(o => `${o.name}*${o.qty}`).join('<br>');
-      Swal.fire({
-        title: '確認訂單內容',
-        html: `訂購人：${name}<br><br><div style="text-align:left;">${summaryText}</div><br>總計：$${document.getElementById('total-price').innerText}`,
-        customClass: { popup: 'large-swal' },
-        showCancelButton: true,
-        confirmButtonText: '確定送出',
-        cancelButtonText: '取消'
-      }).then((result) => {
-        if (result.isConfirmed) {
-          const btn = document.getElementById('submitBtn');
-          btn.disabled = true;
-          btn.innerText = "送出中...";
+    // ── 🚀 2. 送出訂單：取代原 processWebOrder ──
+    async function submitOrder() {
+      const name = document.getElementById('user-name').value.trim();
+      const btn = document.getElementById('submit-btn');
 
-          google.script.run
-            .withSuccessHandler(() => {
-              Swal.fire({ icon: 'success', title: '送出成功！', timer: 1000 });
-              quantities.fill(0); 
-              globalMenu.forEach((_, i) => document.getElementById('qty-'+i).innerText='0'); 
-              updateTotal();
-              loadHistory();
-              btn.disabled = false;
-              btn.innerText = "送出訂單";
-            })
-            .withFailureHandler(() => {
-              Swal.fire({ icon: 'error', title: '送出失敗，請再試一次' });
-              btn.disabled = false;
-              btn.innerText = "送出訂單";
-            })
-            .processWebOrder({userName:name, groupId, sessionId, orderData, type: 'MEAL'});
+      if (!name) {
+        Swal.fire({ title: '提示', text: '請輸入訂購人姓名', icon: 'warning', customClass: { popup: 'large-swal' } });
+        return;
+      }
+
+      // 打包前端使用者點擊的餐點資料
+      let orderData = [];
+      menuList.forEach((item, idx) => {
+        const qty = parseInt(document.getElementById(`qty-${idx}`).innerText);
+        const remark = document.getElementById(`remark-${idx}`).value.trim();
+        if (qty > 0) {
+          orderData.push({
+            meal: item.name,
+            qty: qty,
+            price: item.price,
+            remark: remark
+          });
         }
       });
+
+      if (orderData.length === 0) {
+        Swal.fire({ title: '提示', text: '請至少選擇一項餐點再送出', icon: 'warning', customClass: { popup: 'large-swal' } });
+        return;
+      }
+
+      // 準備使用 Firebase Transaction 防併發與防超截止下單
+      btn.disabled = true;
+      btn.innerText = "提交中...";
+
+      try {
+        const configRef = db.collection("Config").doc(groupId);
+        
+        await db.runTransaction(async (transaction) => {
+          const configDoc = await transaction.get(configRef);
+          
+          // 🔒 安全鎖定一：安全規則與邏輯檢查開團狀態
+          if (!configDoc.exists || configDoc.data()["Status"] !== "ON") {
+            throw new Error("⚠️ 目前沒有進行中的訂餐或已結單。");
+          }
+          
+          // 🔒 安全鎖定二：比對 SessionID 時間戳記
+          if (String(configDoc.data()["Time"]) !== String(sessionId)) {
+            throw new Error("⚠️ 此為舊訂餐階段網頁，請重新從 LINE 取得最新連結。");
+          }
+
+          // 核心：為每項點餐產生獨立寫入操作 (對齊 Orders 欄位結構)
+          orderData.forEach(ord => {
+            const newOrderRef = db.collection("Orders").doc(); // 自動生成唯一 ID
+            transaction.set(newOrderRef, {
+              "時間": new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' }),
+              "GroupID": groupId,
+              "訂購人": name,
+              "餐點名稱": ord.remark ? `${ord.meal} (${ord.remark})` : ord.meal,
+              "金額": ord.price * ord.qty,
+              "類別": reqType,
+              "_session": sessionId // 內部索引供查詢比對過濾
+            });
+          });
+        });
+
+        Swal.fire({ title: '成功', text: '訂餐成功！', icon: 'success', customClass: { popup: 'large-swal' } });
+        
+        // ── 🌟 背景非同步通知 GAS 發送 LINE 訊息 ──
+        // 網頁不用等後端回應，直接重整，GAS 背景慢慢發通知，網頁絕對不會卡死！
+        const summaryText = orderData.map(o => `${o.meal} x${o.qty}`).join(', ');
+        fetch('https://script.google.com/macros/s/你的GAS網頁應用程式部署ID/exec', {
+          method: 'POST',
+          mode: 'no-cors',
+          body: JSON.stringify({
+            action: "async_line_notify",
+            groupId: groupId,
+            userName: name,
+            summary: summaryText,
+            type: reqType
+          })
+        });
+
+        // 重設點餐單
+        menuList.forEach((_, idx) => {
+          document.getElementById(`qty-${idx}`).innerText = "0";
+          const rInput = document.getElementById(`remark-${idx}`);
+          rInput.style.display = 'none';
+          rInput.value = '';
+        });
+        loadHistoryFromFirebase();
+
+      } catch (err) {
+        Swal.fire({ title: '失敗', text: err.message, icon: 'error', customClass: { popup: 'large-swal' } });
+      } finally {
+        btn.disabled = false;
+        btn.innerText = "送出訂單";
+      }
     }
 
-    function deleteOrder(btn, userName, mealName) {
+    // ── 📋 3. 載入當前群組歷史明細 ──
+    async function loadHistoryFromFirebase() {
+      const body = document.getElementById('history-body');
+      try {
+        // 從 Firebase 即時撈取當前群組、當前階段的點餐明細
+        const snapshot = await db.collection("Orders")
+                               .where("GroupID", "==", groupId)
+                               .where("_session", "==", sessionId)
+                               .get();
+
+        if (snapshot.empty) {
+          body.innerHTML = '<tr><td colspan="5">目前尚無人登記資料</td></tr>';
+          return;
+        }
+
+        let html = "";
+        snapshot.forEach(doc => {
+          const id = doc.id;
+          const r = doc.data();
+          html += `<tr>
+            <td>${r["訂購人"]}</td>
+            <td>${r["餐點名稱"]}</td>
+            <td style="text-align:right;">1</td>
+            <td style="text-align:right;">$${r["金額"]}</td>
+            <td style="text-align:center;">
+              <button class="btn-del" onclick="deleteOrder(this, '${id}', '${r["訂購人"]}', '${r["餐點名稱"]}')">刪除</button>
+            </td>
+          </tr>`;
+        });
+        body.innerHTML = html;
+      } catch (err) {
+        body.innerHTML = '<tr><td colspan="5" style="color:red;">載入明細失敗。</td></tr>';
+      }
+    }
+
+    // ── ❌ 4. 刪除訂單：安全規則會比對「訂購人」姓名 ──
+    function deleteOrder(btn, docId, userName, mealName) {
+      const currentInputName = document.getElementById('user-name').value.trim();
+      
+      // 前端初步防呆驗證
+      if (currentInputName !== userName) {
+        Swal.fire({ title: '防禦提示', text: '您只能刪除自己在「訂購人姓名」所填寫的餐點！', icon: 'error', customClass: { popup: 'large-swal' } });
+        return;
+      }
+
       Swal.fire({
         title: '確認刪除',
         html: `確定要刪除 ${userName} 的 ${mealName} 嗎？`,
         customClass: { popup: 'large-swal' },
         icon: 'warning',
         showCancelButton: true,
-        confirmButtonText: '刪除',
+        confirmButtonText: '刪除', refinement: true,
         cancelButtonText: '取消'
-      }).then((result) => {
+      }).then(async (result) => {
         if (result.isConfirmed) {
           btn.disabled = true;
-          btn.innerText = "刪除中...";
-          google.script.run
-            .withSuccessHandler(() => { loadHistory(); })
-            .withFailureHandler(() => { btn.disabled = false; btn.innerText = "刪除"; })
-            .deleteWebOrder(groupId, sessionId, userName, mealName, 'MEAL');
+          btn.innerText = "中...";
+          try {
+            // 直接向 Firebase 送出刪除請求，正式版安全規則會進行二次校驗比對
+            await db.collection("Orders").doc(docId).delete();
+            Swal.fire({ title: '成功', text: '刪除成功！', icon: 'success', customClass: { popup: 'large-swal' } });
+            loadHistoryFromFirebase();
+          } catch (err) {
+            Swal.fire({ title: '失敗', text: '刪除失敗，無編輯權限！', icon: 'error', customClass: { popup: 'large-swal' } });
+          } finally {
+            btn.disabled = false;
+            btn.innerText = "刪除";
+          }
         }
       });
-    }
-
-    function loadHistory() {
-      google.script.run.withSuccessHandler(data => {
-        const body = document.getElementById('history-body');
-        body.innerHTML = data.length === 0 ? '<tr><td colspan="5">無資料</td></tr>' : data.map(r => `<tr>
-          <td>${r.user}</td><td>${r.meal}</td><td style="text-align:right;">${r.qty}</td><td style="text-align:right;">$${r.price * r.qty}</td>
-          <td><button class="btn-delete" onclick="deleteOrder(this, '${r.user}', '${r.meal}')">刪除</button></td>
-        </tr>`).join('');
-      }).getCurrentOrders(groupId, sessionId, 'MEAL');
     }
   </script>
 </body>
