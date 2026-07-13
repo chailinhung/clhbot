@@ -102,9 +102,26 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <script src="config.js"></script>
+  
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  
   <script>
-    // 從網址參數中獲取點餐設定，取代原本的 GAS 模板變數
+    // 🚀 2. 請在此填入你與報表網頁完全相同的 Firebase 金鑰設定
+    const firebaseConfig = {
+      apiKey: "你的API金鑰",
+      authDomain: "你的專案ID.firebaseapp.com",
+      projectId: "你的專案ID",
+      storageBucket: "你的專案ID.appspot.com",
+      messagingSenderId: "...",
+      appId: "..."
+    };
+
+    // 初始化 Firebase & Firestore
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // 從網址參數中獲取點餐設定
     const urlParams = new URLSearchParams(window.location.search);
     const shopName = urlParams.get('shop') || "";
     const groupId = urlParams.get('gid') || "";
@@ -122,22 +139,19 @@
       loadHistory();
     };
 
-    // 從 Firebase 獲取該商店的菜單
+    // 🚀 3. 從 Firestore 獲取該商店的菜單 (與原本相容格式)
     async function loadMenu() {
       const menuList = document.getElementById('menu-list');
       try {
-        const data = await firebaseFetch('shops');
+        const snapshot = await db.collection('shops').get();
         let menuItems = [];
         
-        if (Array.isArray(data)) {
-          menuItems = data.filter(r => r && (r.shopName === shopName || r["商店名稱"] === shopName) && (r.type === 'DRINK' || r["類型"] === 'DRINK'));
-        } else if (typeof data === 'object' && data !== null) {
-          if (data[shopName] && (data[shopName].menu || data[shopName].phone)) {
-            menuItems = data[shopName].menu || [];
-          } else {
-            menuItems = Object.values(data).filter(r => r && (r.shopName === shopName || r["商店名稱"] === shopName) && (r.type === 'DRINK' || r["類型"] === 'DRINK'));
+        snapshot.forEach(doc => {
+          const r = doc.data();
+          if (r && (r.shopName === shopName || r["商店名稱"] === shopName) && (r.type === 'DRINK' || r["類型"] === 'DRINK')) {
+            menuItems.push(r);
           }
-        }
+        });
         
         globalMenu = menuItems.map(item => ({
           name: item.name || item["餐點名稱"] || "",
@@ -182,6 +196,7 @@
       if (type === 'sugar') selectedSugar = value; else selectedIce = value;
     }
     
+    // 🚀 4. 將確認好的訂單寫入 Firestore
     function confirmCustom(event) {
       const userName = document.getElementById('userName').value.trim();
       if (!userName) { Swal.fire('請先輸入姓名！'); return; }
@@ -206,23 +221,27 @@
         if (result.isConfirmed) {
           btn.innerText = "傳送中...";
           try {
-            await firebaseFetch(`Orders/${groupId}_${sessionId}`, {
-              method: 'POST',
-              payload: {
-                time: new Date().toISOString(),
-                groupId: groupId,
-                userName: userName,
-                name: fullMealName,
-                price: globalMenu[currentItemIndex].price,
-                type: 'DRINK'
-              }
+            // 🎯 使用 Firestore 標準的 add() 方法寫入 Orders 集合，欄位與你的報表和後端 100% 同步
+            await db.collection("Orders").add({
+              "time": new Date().toISOString(),
+              "GroupID": groupId,         // 同步使用大寫 ID 格式
+              "_session": sessionId,      // 同步使用底線 session 格式
+              "訂購人": userName,
+              "userName": userName,       // 雙欄位並存，防呆最大化
+              "餐點名稱": fullMealName,
+              "name": fullMealName,
+              "價格": globalMenu[currentItemIndex].price,
+              "price": globalMenu[currentItemIndex].price,
+              "type": 'DRINK'
             });
+
             Swal.fire({ icon: 'success', title: '訂單已送出！', timer: 800 });
             closeModal(); 
             loadHistory();
             btn.disabled = false;
             btn.innerText = originalText;
           } catch (err) {
+            console.error("寫入訂單失敗:", err);
             Swal.fire({ icon: 'error', title: '送出失敗，請再試一次' });
             btn.disabled = false;
             btn.innerText = originalText;
@@ -234,6 +253,7 @@
       });
     }
 
+    // 🚀 5. 從 Firestore 刪除點餐紀錄
     async function deleteOrder(btn, userName, mealName, keys) {
       Swal.fire({
         title: '確認刪除',
@@ -248,13 +268,14 @@
           btn.disabled = true;
           btn.innerText = "刪除中...";
           try {
-            // 從 Firebase 中刪除該訂單的 Key
+            // 🎯 走正式 Firestore 的文件識別碼進行單筆或多筆刪除
             for (let key of keys) {
-              await firebaseFetch(`Orders/${groupId}_${sessionId}/${key}`, { method: 'DELETE' });
+              await db.collection("Orders").doc(key).delete();
             }
             Swal.fire({ icon: 'success', title: '已刪除！', timer: 800 });
             loadHistory();
           } catch (err) {
+            console.error("刪除訂單失敗:", err);
             Swal.fire({ icon: 'error', title: '刪除失敗，請重試' });
             btn.disabled = false;
             btn.innerText = "刪除";
@@ -263,23 +284,36 @@
       });
     }
 
+    // 🚀 6. 從 Firestore 精準查詢此團的訂單明細並渲染
     async function loadHistory() {
       const body = document.getElementById('history-body');
       try {
-        const data = await firebaseFetch(`Orders/${groupId}_${sessionId}`);
-        if (!data) {
+        // 🎯 透過 .where() 找出符合這次開團且屬於飲料的資料
+        const snapshot = await db.collection("Orders")
+                               .where("GroupID", "==", groupId)
+                               .where("_session", "==", sessionId)
+                               .get();
+
+        if (snapshot.empty) {
           body.innerHTML = '<tr><td colspan="5">無資料</td></tr>';
           return;
         }
         
-        // 整理並合併點餐紀錄
-        const ordersList = Object.keys(data).map(key => ({
-          key: key,
-          user: data[key].userName || data[key].user || "",
-          meal: data[key].name || data[key].meal || "",
-          price: Number(data[key].price || 0),
-          type: data[key].type || "MEAL"
-        })).filter(o => o.type === 'DRINK');
+        let ordersList = [];
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          const itemType = data.type || "MEAL";
+          
+          if (itemType === 'DRINK') {
+            ordersList.push({
+              key: doc.id, // Firestore 自動生成的文件 ID 當作刪除用的 key
+              user: data.訂購人 || data.userName || data.user || "",
+              meal: data.餐點名稱 || data.name || data.meal || "",
+              price: Number(data.價格 || data.price || 0),
+              type: itemType
+            });
+          }
+        });
         
         const historyMap = {};
         ordersList.forEach(o => {
@@ -302,7 +336,7 @@
           <td><button class="btn-delete" onclick="deleteOrder(this, '${r.user}', '${r.meal}', ${JSON.stringify(r.keys)})">刪除</button></td>
         </tr>`).join('');
       } catch (err) {
-        console.error(err);
+        console.error("載入歷史紀錄失敗:", err);
         body.innerHTML = '<tr><td colspan="5">載入歷史紀錄失敗</td></tr>';
       }
     }
