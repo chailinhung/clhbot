@@ -52,8 +52,24 @@
     <div class="total-box" id="display-total">總額：$0</div>
   </div>
 
-  <script src="config.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  
   <script>
+    // 🚀 2. 請在此填入你與點餐網頁完全相同的 Firebase 金鑰資訊
+    const firebaseConfig = {
+      apiKey: "你的API金鑰",
+      authDomain: "你的專案ID.firebaseapp.com",
+      projectId: "你的專案ID",
+      storageBucket: "你的專案ID.appspot.com",
+      messagingSenderId: "...",
+      appId: "..."
+    };
+
+    // 初始化 Firebase & Firestore
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
     const urlParams = new URLSearchParams(window.location.search);
     const startTime = urlParams.get('start') || "0";
     const endTime = urlParams.get('end') || Infinity;
@@ -82,8 +98,13 @@
 
     async function loadReport() {
       try {
-        const data = await firebaseFetch(`Orders/${groupId}_${startTime}`);
-        if (!data) {
+        // 🚀 3. 改用正統 Firestore 條件篩選，撈出該群組、該開團階段的所有訂單
+        const snapshot = await db.collection("Orders")
+                               .where("GroupID", "==", groupId)
+                               .where("_session", "==", startTime)
+                               .get();
+
+        if (snapshot.empty) {
           showEmpty();
           return;
         }
@@ -91,15 +112,16 @@
         let detailsMap = {}, userTotal = {}, total = 0;
         let userBundles = {}, normalSummary = {};
 
-        // 解析 Firebase 的訂單明細
-        Object.keys(data).forEach(key => {
-          const item = data[key];
+        // 🚀 4. 將原本的 Object.keys(data) 迴圈，改為 Firestore 的 snapshot 迭代
+        snapshot.forEach(doc => {
+          const item = doc.data();
           const itemType = item.type || "MEAL";
           
           if (itemType === type) {
-            const user = item.userName || item.user || "";
-            const meal = item.name || item.meal || "";
-            const price = Number(item.price || 0);
+            // 💡 支援原本與中文版的欄位防呆相容
+            const user = item.訂購人 || item.userName || item.user || "";
+            const meal = item.餐點名稱 || item.name || item.meal || "";
+            const price = Number(item.價格 || item.price || 0);
             const mKey = `${user}|${meal}`;
 
             if (!detailsMap[mKey]) {
@@ -120,6 +142,7 @@
           }
         });
 
+        // ── 後續渲染資料邏輯，100% 完美保留 ──
         let summary = { ...normalSummary };
         for (let user in userBundles) {
           let meals = Object.keys(userBundles[user]).sort();
@@ -163,7 +186,7 @@
         document.getElementById('display-total').innerText = `總額：$${total}`;
 
       } catch (err) {
-        console.error(err);
+        console.error("Firestore 載入報表失敗:", err);
         showEmpty();
       }
     }
@@ -175,7 +198,8 @@
       document.getElementById('display-total').innerText = '總額：$0';
     }
 
-    loadReport();
+    // 綁定網頁載入執行
+    window.onload = loadReport;
   </script>
 </body>
 </html>
