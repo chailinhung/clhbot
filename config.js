@@ -1,6 +1,6 @@
 // === GitHub Frontend Firestore Config ===
-const FIRESTORE_PROJECT_ID = "YOUR-PROJECT-ID"; // 請填入您的 Firebase 專案 ID
-const FIRESTORE_API_KEY = ""; // 若有設定 API Key 則填寫，否則留空
+const FIRESTORE_PROJECT_ID = "clhbot"; // 請填入您的 Firebase 專案 ID
+const FIRESTORE_API_KEY = "AIzaSyCExKi_r1hqwCdX-0lPAx73lb38zlXNYl0"; // 若有設定 API Key 則填寫，否則留空
 
 /**
  * 輕量級 Firestore REST API 請求工具 (不需引入 SDK)
