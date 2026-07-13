@@ -15,7 +15,7 @@
     <div class="loader"></div>
     <script>
         const LIFF_ID = '2010205613-GBhWoaIf'; 
-        const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzhUln6Pkz83tH0tgZo43QNqbDutANsa0Jzrov-qspv5Zk-nJG8s_nc1_XirMW8pZsTxw/exec';
+        // 🚀 已移除不需使用的 GAS 網址變數，此頁保持純前端運行，直接將資料交棒給下一頁的 Firestore SDK 處理。
 
         async function init() {
             // 設定 5 秒強制跳轉定時器 (Timeout)
