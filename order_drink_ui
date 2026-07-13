@@ -102,69 +102,25 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-  
   <script>
-    // 🚀 2. 請在此填入你與報表網頁完全相同的 Firebase 金鑰設定
-    const firebaseConfig = {
-      apiKey: "AIzaSyCExKi_r1hqwCdX-0lPAx73lb38zlXNYl0",
-      authDomain: "clhbot.firebaseapp.com",
-      projectId: "clhbot",
-      storageBucket: "clhbot.firebasestorage.app",
-      messagingSenderId: "607201536273",
-      appId: "1:607201536273:web:905d7dedc96a487765c4b0",
-      measurementId: "G-V25VHR10PJ"
-    };
+    // 【恢復模板解析】確保在 iframe 中也能拿到參數
+    const shopName = "<?= shopName ?>";
+    const groupId = "<?= groupId ?>";
+    const sessionId = "<?= sessionId ?>";
+    const uNameParam = "<?= uName ?>";
 
-    // 初始化 Firebase & Firestore
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
-
-    // 從網址參數中獲取點餐設定
-    const urlParams = new URLSearchParams(window.location.search);
-    const shopName = urlParams.get('shop') || "";
-    const groupId = urlParams.get('gid') || "";
-    const sessionId = urlParams.get('sid') || "";
-    const uNameParam = urlParams.get('uName') || "";
-
-    let globalMenu = [];
+    // 優化：直接從嵌入的資料讀取
+    let globalMenu = <?!= menuData ?>;
     let currentItemIndex = -1, selectedSugar = "半糖", selectedIce = "微冰";
 
     window.onload = function() {
       if (shopName) document.getElementById('shop-title').innerText = "🥤 " + shopName + " (飲料)";
       if (uNameParam) document.getElementById('userName').value = uNameParam;
       
-      loadMenu();
+      // 直接渲染
+      renderMenu();
       loadHistory();
     };
-
-    // 🚀 3. 從 Firestore 獲取該商店的菜單 (與原本相容格式)
-    async function loadMenu() {
-      const menuList = document.getElementById('menu-list');
-      try {
-        const snapshot = await db.collection('shops').get();
-        let menuItems = [];
-        
-        snapshot.forEach(doc => {
-          const r = doc.data();
-          if (r && (r.shopName === shopName || r["商店名稱"] === shopName) && (r.type === 'DRINK' || r["類型"] === 'DRINK')) {
-            menuItems.push(r);
-          }
-        });
-        
-        globalMenu = menuItems.map(item => ({
-          name: item.name || item["餐點名稱"] || "",
-          price: Number(item.price || item["價格"] || 0)
-        }));
-
-        renderMenu();
-      } catch (err) {
-        console.error(err);
-        menuList.innerHTML = '<div style="text-align:center; color:red; padding:20px;">載入菜單失敗，請確認 Firebase 設定</div>';
-      }
-    }
 
     function renderMenu() {
       const list = document.getElementById('menu-list');
@@ -196,8 +152,6 @@
       for (let btn of btns) { btn.classList.remove('active'); if (btn.innerText === value) btn.classList.add('active'); }
       if (type === 'sugar') selectedSugar = value; else selectedIce = value;
     }
-    
-    // 🚀 4. 將確認好的訂單寫入 Firestore
     function confirmCustom(event) {
       const userName = document.getElementById('userName').value.trim();
       if (!userName) { Swal.fire('請先輸入姓名！'); return; }
@@ -218,35 +172,24 @@
         showCancelButton: true,
         confirmButtonText: '確定送出',
         cancelButtonText: '取消'
-      }).then(async (result) => {
+      }).then((result) => {
         if (result.isConfirmed) {
+          const orderData = [{ name: fullMealName, price: globalMenu[currentItemIndex].price, qty: 1 }];
           btn.innerText = "傳送中...";
-          try {
-            // 🎯 使用 Firestore 標準的 add() 方法寫入 Orders 集合，欄位與你的報表和後端 100% 同步
-            await db.collection("Orders").add({
-              "time": new Date().toISOString(),
-              "GroupID": groupId,         // 同步使用大寫 ID 格式
-              "_session": sessionId,      // 同步使用底線 session 格式
-              "訂購人": userName,
-              "userName": userName,       // 雙欄位並存，防呆最大化
-              "餐點名稱": fullMealName,
-              "name": fullMealName,
-              "價格": globalMenu[currentItemIndex].price,
-              "price": globalMenu[currentItemIndex].price,
-              "type": 'DRINK'
-            });
-
-            Swal.fire({ icon: 'success', title: '訂單已送出！', timer: 800 });
-            closeModal(); 
-            loadHistory();
-            btn.disabled = false;
-            btn.innerText = originalText;
-          } catch (err) {
-            console.error("寫入訂單失敗:", err);
-            Swal.fire({ icon: 'error', title: '送出失敗，請再試一次' });
-            btn.disabled = false;
-            btn.innerText = originalText;
-          }
+          
+          google.script.run
+            .withSuccessHandler(() => {
+              Swal.fire({ icon: 'success', title: '訂單已送出！', timer: 800 });
+              closeModal(); loadHistory();
+              btn.disabled = false;
+              btn.innerText = originalText;
+            })
+            .withFailureHandler(() => {
+               Swal.fire({ icon: 'error', title: '送出失敗，請再試一次' });
+               btn.disabled = false;
+               btn.innerText = originalText;
+            })
+            .processWebOrder({userName: userName, groupId, sessionId, orderData, type: 'DRINK'});
         } else {
           btn.disabled = false;
           btn.innerText = originalText;
@@ -254,8 +197,7 @@
       });
     }
 
-    // 🚀 5. 從 Firestore 刪除點餐紀錄
-    async function deleteOrder(btn, userName, mealName, keys) {
+    function deleteOrder(btn, userName, mealName) {
       Swal.fire({
         title: '確認刪除',
         html: `確定要刪除 ${userName} 的 ${mealName} 嗎？`,
@@ -264,82 +206,25 @@
         showCancelButton: true,
         confirmButtonText: '刪除',
         cancelButtonText: '取消'
-      }).then(async (result) => {
+      }).then((result) => {
         if (result.isConfirmed) {
           btn.disabled = true;
           btn.innerText = "刪除中...";
-          try {
-            // 🎯 走正式 Firestore 的文件識別碼進行單筆或多筆刪除
-            for (let key of keys) {
-              await db.collection("Orders").doc(key).delete();
-            }
-            Swal.fire({ icon: 'success', title: '已刪除！', timer: 800 });
-            loadHistory();
-          } catch (err) {
-            console.error("刪除訂單失敗:", err);
-            Swal.fire({ icon: 'error', title: '刪除失敗，請重試' });
-            btn.disabled = false;
-            btn.innerText = "刪除";
-          }
+          google.script.run
+            .withSuccessHandler(() => { loadHistory(); })
+            .withFailureHandler(() => { btn.disabled = false; btn.innerText = "刪除"; })
+            .deleteWebOrder(groupId, sessionId, userName, mealName, 'DRINK');
         }
       });
     }
-
-    // 🚀 6. 從 Firestore 精準查詢此團的訂單明細並渲染
-    async function loadHistory() {
-      const body = document.getElementById('history-body');
-      try {
-        // 🎯 透過 .where() 找出符合這次開團且屬於飲料的資料
-        const snapshot = await db.collection("Orders")
-                               .where("GroupID", "==", groupId)
-                               .where("_session", "==", sessionId)
-                               .get();
-
-        if (snapshot.empty) {
-          body.innerHTML = '<tr><td colspan="5">無資料</td></tr>';
-          return;
-        }
-        
-        let ordersList = [];
-        snapshot.forEach(doc => {
-          const data = doc.data();
-          const itemType = data.type || "MEAL";
-          
-          if (itemType === 'DRINK') {
-            ordersList.push({
-              key: doc.id, // Firestore 自動生成的文件 ID 當作刪除用的 key
-              user: data.訂購人 || data.userName || data.user || "",
-              meal: data.餐點名稱 || data.name || data.meal || "",
-              price: Number(data.價格 || data.price || 0),
-              type: itemType
-            });
-          }
-        });
-        
-        const historyMap = {};
-        ordersList.forEach(o => {
-          const key = `${o.user}|${o.meal}`;
-          if (!historyMap[key]) {
-            historyMap[key] = { user: o.user, meal: o.meal, price: o.price, qty: 1, keys: [o.key] };
-          } else {
-            historyMap[key].qty++;
-            historyMap[key].keys.push(o.key);
-          }
-        });
-        
-        const aggregated = Object.values(historyMap).sort((a, b) => a.user.localeCompare(b.user) || a.meal.localeCompare(b.meal));
-        
-        body.innerHTML = aggregated.length === 0 ? '<tr><td colspan="5">無資料</td></tr>' : aggregated.map(r => `<tr>
-          <td>${r.user}</td>
-          <td>${r.meal}</td>
-          <td style="text-align:right;">${r.qty}</td>
-          <td style="text-align:right;">$${r.price * r.qty}</td>
-          <td><button class="btn-delete" onclick="deleteOrder(this, '${r.user}', '${r.meal}', ${JSON.stringify(r.keys)})">刪除</button></td>
+    function loadHistory() {
+      google.script.run.withSuccessHandler(data => {
+        const body = document.getElementById('history-body');
+        body.innerHTML = data.length === 0 ? '<tr><td colspan="5">無資料</td></tr>' : data.map(r => `<tr>
+          <td>${r.user}</td><td>${r.meal}</td><td style="text-align:right;">${r.qty}</td><td style="text-align:right;">$${r.price * r.qty}</td>
+          <td><button class="btn-delete" onclick="deleteOrder(this, '${r.user}', '${r.meal}')">刪除</button></td>
         </tr>`).join('');
-      } catch (err) {
-        console.error("載入歷史紀錄失敗:", err);
-        body.innerHTML = '<tr><td colspan="5">載入歷史紀錄失敗</td></tr>';
-      }
+      }).getCurrentOrders(groupId, sessionId, 'DRINK');
     }
   </script>
 </body>
