@@ -85,18 +85,8 @@
     async function loadMenu() {
       const menuList = document.getElementById('menu-list');
       try {
-        const data = await firebaseFetch('shops');
-        let menuItems = [];
-        
-        if (Array.isArray(data)) {
-          menuItems = data.filter(r => r && (r.shopName === shopName || r["商店名稱"] === shopName) && (r.type === 'MEAL' || r["類型"] === 'MEAL'));
-        } else if (typeof data === 'object' && data !== null) {
-          if (data[shopName] && (data[shopName].menu || data[shopName].phone)) {
-            menuItems = data[shopName].menu || [];
-          } else {
-            menuItems = Object.values(data).filter(r => r && (r.shopName === shopName || r["商店名稱"] === shopName) && (r.type === 'MEAL' || r["類型"] === 'MEAL'));
-          }
-        }
+        const shops = await getCollection('shops');
+        const menuItems = shops.filter(r => (r.shopName === shopName || r["商店名稱"] === shopName) && (r.type === 'MEAL' || r["類型"] === 'MEAL'));
         
         globalMenu = menuItems.map(item => ({
           name: item.name || item["餐點名稱"] || "",
@@ -166,10 +156,10 @@
           btn.innerText = "送出中...";
 
           try {
-            // 將訂單逐項寫入 Firebase Realtime Database
+            // 將訂單逐項寫入 Firestore Subcollection
             for (let item of orderData) {
               for (let i = 0; i < item.qty; i++) {
-                await firebaseFetch(`Orders/${groupId}_${sessionId}`, {
+                await firebaseFetch(`Sessions/${groupId}_${sessionId}/Orders`, {
                   method: 'POST',
                   payload: {
                     time: new Date().toISOString(),
@@ -212,9 +202,9 @@
           btn.disabled = true;
           btn.innerText = "刪除中...";
           try {
-            // 從 Firebase 中刪除指定的訂單 Key
+            // 從 Firestore 中刪除指定的文檔 ID
             for (let key of keys) {
-              await firebaseFetch(`Orders/${groupId}_${sessionId}/${key}`, { method: 'DELETE' });
+              await firebaseFetch(`Sessions/${groupId}_${sessionId}/Orders/${key}`, { method: 'DELETE' });
             }
             Swal.fire({ icon: 'success', title: '已刪除！', timer: 800 });
             loadHistory();
@@ -230,29 +220,24 @@
     async function loadHistory() {
       const body = document.getElementById('history-body');
       try {
-        const data = await firebaseFetch(`Orders/${groupId}_${sessionId}`);
-        if (!data) {
-          body.innerHTML = '<tr><td colspan="5">無資料</td></tr>';
-          return;
-        }
-        
-        // 整理並合併點餐紀錄
-        const ordersList = Object.keys(data).map(key => ({
-          key: key,
-          user: data[key].userName || data[key].user || "",
-          meal: data[key].name || data[key].meal || "",
-          price: Number(data[key].price || 0),
-          type: data[key].type || "MEAL"
-        })).filter(o => o.type === 'MEAL');
+        // 從 Firestore 子集合載入訂單
+        const ordersList = await getCollection(`Sessions/${groupId}_${sessionId}/Orders`);
         
         const historyMap = {};
         ordersList.forEach(o => {
-          const key = `${o.user}|${o.meal}`;
-          if (!historyMap[key]) {
-            historyMap[key] = { user: o.user, meal: o.meal, price: o.price, qty: 1, keys: [o.key] };
-          } else {
-            historyMap[key].qty++;
-            historyMap[key].keys.push(o.key);
+          const user = o.userName || o.user || "";
+          const meal = o.name || o.meal || "";
+          const price = Number(o.price || 0);
+          const type = o.type || "MEAL";
+          
+          if (type === 'MEAL') {
+            const key = `${user}|${meal}`;
+            if (!historyMap[key]) {
+              historyMap[key] = { user: user, meal: meal, price: price, qty: 1, keys: [o.id] };
+            } else {
+              historyMap[key].qty++;
+              historyMap[key].keys.push(o.id);
+            }
           }
         });
         
