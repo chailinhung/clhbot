@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>訂餐報表</title>
+  <style>
+    :root { --primary: #00b900; }
+    body { font-family: sans-serif; padding: 6px; background: #fff; color: #000; font-size: 30px; margin: 0; }
+    .container { max-width: 100%; margin: 0 auto; padding: 6px; }
+    h2 { color: var(--primary); text-align: center; border-bottom: 3px solid var(--primary); padding-bottom: 6px; margin: 12px 0 6px 0; font-size: 2.4rem; }
+    
+    .shop-info { background: #f0fdf0; padding: 12px; border-left: 6px solid var(--primary); margin-bottom: 12px; }
+    .shop-name, .shop-phone { font-weight: 700; font-size: 2.25rem; color: #2e7d32; }
+    
+    table { width: 100%; border-collapse: collapse; font-size: 2.1rem; margin-bottom: 18px; }
+    th { background: #fcfcfc; padding: 6px 3px; text-align: left; }
+    td { padding: 6px 3px; border-bottom: 3px solid #eee; }
+    
+    .details-table th:nth-child(1), .details-table td:nth-child(1) { width: 5.5em; }
+    .details-table th:nth-child(3), .details-table td:nth-child(3) { width: 1.2em; white-space: nowrap; }
+    .details-table th:nth-child(4), .details-table td:nth-child(4) { width: 3.8em; white-space: nowrap; }
+    
+    .text-right { text-align: right; }
+    .total-box { text-align: right; font-weight: 700; font-size: 2.55rem; color: #d32f2f; padding: 12px 6px; border-top: 3px solid var(--primary); margin-top: 12px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="shop-info">
+      <div class="shop-name" id="display-shop-name">🏠 載入中...</div>
+      <div class="shop-phone" id="display-shop-phone" style="margin-top: 6px;">📞 電話：載入中...</div>
+    </div>
+
+    <h2>🍱 餐點匯總</h2>
+    <table class="summary-table">
+      <thead><tr><th>餐點名稱</th><th class="text-right">數量</th></tr></thead>
+      <tbody id="summary-body"><tr><td colspan="2">讀取中...</td></tr></tbody>
+    </table>
+
+    <h2>📋 訂購明細</h2>
+    <table class="details-table">
+      <thead><tr><th>訂購人</th><th>餐點</th><th class="text-right">數</th><th class="text-right">金額</th></tr></thead>
+      <tbody id="details-body"><tr><td colspan="4">讀取中...</td></tr></tbody>
+    </table>
+
+    <h2>💰 應付總額</h2>
+    <table class="total-table">
+      <thead><tr><th>訂購人</th><th class="text-right">總額</th></tr></thead>
+      <tbody id="total-body"><tr><td colspan="2">讀取中...</td></tr></tbody>
+    </table>
+
+    <div class="total-box" id="display-total">總額：$0</div>
+  </div>
+
+  <script src="config.js"></script>
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const startTime = urlParams.get('start') || "0";
+    const endTime = urlParams.get('end') || Infinity;
+    const groupId = urlParams.get('gid') || "";
+    const shopName = urlParams.get('shop') || "未知";
+    const shopPhone = urlParams.get('phone') || "未知";
+    const type = urlParams.get('type') || "MEAL";
+
+    // 根據類型切換主題色彩 (飲料: 藍色, 點餐: 綠色)
+    if (type === "DRINK") {
+      document.documentElement.style.setProperty('--primary', '#008cff');
+      const infoBox = document.querySelector('.shop-info');
+      if (infoBox) {
+        infoBox.style.background = '#f0f8ff';
+        infoBox.style.borderLeftColor = '#008cff';
+      }
+      const phoneText = document.querySelector('.shop-phone');
+      const nameText = document.querySelector('.shop-name');
+      if (phoneText) phoneText.style.color = '#1565c0';
+      if (nameText) nameText.style.color = '#1565c0';
+    }
+
+    document.title = (type === "DRINK" ? "飲料" : "") + "訂餐報表";
+    document.getElementById('display-shop-name').innerText = `🏠 ${type === "DRINK" ? "飲料" : ""}商店：${shopName}`;
+    document.getElementById('display-shop-phone').innerText = `📞 電話：${shopPhone}`;
+
+    async function loadReport() {
+      try {
+        const data = await firebaseFetch(`Orders/${groupId}_${startTime}`);
+        if (!data) {
+          showEmpty();
+          return;
+        }
+
+        let detailsMap = {}, userTotal = {}, total = 0;
+        let userBundles = {}, normalSummary = {};
+
+        // 解析 Firebase 的訂單明細
+        Object.keys(data).forEach(key => {
+          const item = data[key];
+          const itemType = item.type || "MEAL";
+          
+          if (itemType === type) {
+            const user = item.userName || item.user || "";
+            const meal = item.name || item.meal || "";
+            const price = Number(item.price || 0);
+            const mKey = `${user}|${meal}`;
+
+            if (!detailsMap[mKey]) {
+              detailsMap[mKey] = { user, meal, price, qty: 1 };
+            } else {
+              detailsMap[mKey].qty++;
+            }
+            total += price;
+            userTotal[user] = (userTotal[user] || 0) + price;
+
+            // 特殊套餐規則 (以 # 開頭)
+            if (meal && meal.toString().indexOf("#") === 0) {
+              if (!userBundles[user]) userBundles[user] = {};
+              userBundles[user][meal] = (userBundles[user][meal] || 0) + 1;
+            } else {
+              normalSummary[meal] = (normalSummary[meal] || 0) + 1;
+            }
+          }
+        });
+
+        let summary = { ...normalSummary };
+        for (let user in userBundles) {
+          let meals = Object.keys(userBundles[user]).sort();
+          let bundleStr = meals.map(m => m + "*" + userBundles[user][m]).join(" ");
+          summary[bundleStr] = (summary[bundleStr] || 0) + 1;
+        }
+
+        // 渲染餐點匯總
+        const summaryBody = document.getElementById('summary-body');
+        const summaryKeys = Object.keys(summary);
+        if (summaryKeys.length === 0) {
+          summaryBody.innerHTML = '<tr><td colspan="2">無資料</td></tr>';
+        } else {
+          summaryBody.innerHTML = summaryKeys.map(meal => `
+            <tr><td>${meal}</td><td class="text-right">${summary[meal]}</td></tr>
+          `).join('');
+        }
+
+        // 渲染訂購明細
+        const detailsBody = document.getElementById('details-body');
+        const filtered = Object.keys(detailsMap).map(k => detailsMap[k]).sort((a, b) => a.user.localeCompare(b.user) || a.meal.localeCompare(b.meal));
+        if (filtered.length === 0) {
+          detailsBody.innerHTML = '<tr><td colspan="4">無資料</td></tr>';
+        } else {
+          detailsBody.innerHTML = filtered.map(row => `
+            <tr><td>${row.user}</td><td>${row.meal}</td><td class="text-right">${row.qty}</td><td class="text-right">$${row.price * row.qty}</td></tr>
+          `).join('');
+        }
+
+        // 渲染應付總額
+        const totalBody = document.getElementById('total-body');
+        const sortedUsers = Object.keys(userTotal).sort();
+        if (sortedUsers.length === 0) {
+          totalBody.innerHTML = '<tr><td colspan="2">無資料</td></tr>';
+        } else {
+          totalBody.innerHTML = sortedUsers.map(user => `
+            <tr><td>${user}</td><td class="text-right">$${userTotal[user]}</td></tr>
+          `).join('');
+        }
+
+        document.getElementById('display-total').innerText = `總額：$${total}`;
+
+      } catch (err) {
+        console.error(err);
+        showEmpty();
+      }
+    }
+
+    function showEmpty() {
+      document.getElementById('summary-body').innerHTML = '<tr><td colspan="2">無資料</td></tr>';
+      document.getElementById('details-body').innerHTML = '<tr><td colspan="4">無資料</td></tr>';
+      document.getElementById('total-body').innerHTML = '<tr><td colspan="2">無資料</td></tr>';
+      document.getElementById('display-total').innerText = '總額：$0';
+    }
+
+    loadReport();
+  </script>
+</body>
+</html>
