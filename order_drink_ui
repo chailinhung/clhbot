@@ -109,12 +109,13 @@
   <script>
     // 🚀 2. 請在此填入你與報表網頁完全相同的 Firebase 金鑰設定
     const firebaseConfig = {
-      apiKey: "你的API金鑰",
-      authDomain: "你的專案ID.firebaseapp.com",
-      projectId: "你的專案ID",
-      storageBucket: "你的專案ID.appspot.com",
-      messagingSenderId: "...",
-      appId: "..."
+      apiKey: "AIzaSyCExKi_r1hqwCdX-0lPAx73lb38zlXNYl0",
+      authDomain: "clhbot.firebaseapp.com",
+      projectId: "clhbot",
+      storageBucket: "clhbot.firebasestorage.app",
+      messagingSenderId: "607201536273",
+      appId: "1:607201536273:web:905d7dedc96a487765c4b0",
+      measurementId: "G-V25VHR10PJ"
     };
 
     // 初始化 Firebase & Firestore
