@@ -61,60 +61,26 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <script src="config.js"></script>
   <script>
-    // 請在此填入你與報表網頁完全相同的 Firebase 金鑰設定
-    const firebaseConfig = {
-      apiKey: "AIzaSyCExKi_r1hqwCdX-0lPAx73lb38zlXNYl0",
-      authDomain: "clhbot.firebaseapp.com",
-      projectId: "clhbot",
-      storageBucket: "clhbot.firebasestorage.app",
-      messagingSenderId: "607201536273",
-      appId: "1:607201536273:web:905d7dedc96a487765c4b0",
-      measurementId: "G-V25VHR10PJ"
-    };
+    // 【恢復模板解析】確保在 iframe 中也能拿到參數
+    const shopName = "<?= shopName ?>";
+    const groupId = "<?= groupId ?>";
+    const sessionId = "<?= sessionId ?>";
+    const uName = "<?= uName ?>";
 
-    // 初始化 Firebase & Firestore
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
-
-    // 從網址參數中獲取點餐設定，取代原本的 GAS 模板變數
-    const urlParams = new URLSearchParams(window.location.search);
-    const shopName = urlParams.get('shop') || "";
-    const groupId = urlParams.get('gid') || "";
-    const sessionId = urlParams.get('sid') || "";
-    const uName = urlParams.get('uName') || "";
-
-    let globalMenu = [];
+    // 優化：直接從嵌入的資料讀取，不需再透過 server call
+    let globalMenu = <?!= menuData ?>;
     let quantities = [];
 
     window.onload = function() {
       if (shopName) document.getElementById('shop-title').innerText = "🏪 " + shopName;
       if (uName) document.getElementById('userName').value = uName;
       
-      loadMenu();
+      // 直接渲染菜單
+      quantities = new Array(globalMenu.length).fill(0);
+      renderMenu();
       loadHistory();
     };
-
-    // 從 Firebase 獲取該商店的菜單
-    async function loadMenu() {
-      const menuList = document.getElementById('menu-list');
-      try {
-        const shops = await getCollection('shops');
-        const menuItems = shops.filter(r => (r.shopName === shopName || r["商店名稱"] === shopName) && (r.type === 'MEAL' || r["類型"] === 'MEAL'));
-        
-        globalMenu = menuItems.map(item => ({
-          name: item.name || item["餐點名稱"] || "",
-          price: Number(item.price || item["價格"] || 0)
-        }));
-
-        quantities = new Array(globalMenu.length).fill(0);
-        renderMenu();
-      } catch (err) {
-        console.error(err);
-        menuList.innerHTML = '<div style="text-align:center; color:red; padding:20px;">載入菜單失敗，請確認 Firebase 設定</div>';
-      }
-    }
 
     function renderMenu() {
       const list = document.getElementById('menu-list');
@@ -164,46 +130,33 @@
         showCancelButton: true,
         confirmButtonText: '確定送出',
         cancelButtonText: '取消'
-      }).then(async (result) => {
+      }).then((result) => {
         if (result.isConfirmed) {
           const btn = document.getElementById('submitBtn');
           btn.disabled = true;
           btn.innerText = "送出中...";
 
-          try {
-            // 將訂單逐項寫入 Firestore Subcollection
-            for (let item of orderData) {
-              for (let i = 0; i < item.qty; i++) {
-                await firebaseFetch(`Sessions/${groupId}_${sessionId}/Orders`, {
-                  method: 'POST',
-                  payload: {
-                    time: new Date().toISOString(),
-                    groupId: groupId,
-                    userName: name,
-                    name: item.name,
-                    price: item.price,
-                    type: 'MEAL'
-                  }
-                });
-              }
-            }
-            Swal.fire({ icon: 'success', title: '送出成功！', timer: 1000 });
-            quantities.fill(0); 
-            globalMenu.forEach((_, i) => document.getElementById('qty-'+i).innerText='0'); 
-            updateTotal();
-            loadHistory();
-            btn.disabled = false;
-            btn.innerText = "送出訂單";
-          } catch (err) {
-            Swal.fire({ icon: 'error', title: '送出失敗，請再試一次' });
-            btn.disabled = false;
-            btn.innerText = "送出訂單";
-          }
+          google.script.run
+            .withSuccessHandler(() => {
+              Swal.fire({ icon: 'success', title: '送出成功！', timer: 1000 });
+              quantities.fill(0); 
+              globalMenu.forEach((_, i) => document.getElementById('qty-'+i).innerText='0'); 
+              updateTotal();
+              loadHistory();
+              btn.disabled = false;
+              btn.innerText = "送出訂單";
+            })
+            .withFailureHandler(() => {
+              Swal.fire({ icon: 'error', title: '送出失敗，請再試一次' });
+              btn.disabled = false;
+              btn.innerText = "送出訂單";
+            })
+            .processWebOrder({userName:name, groupId, sessionId, orderData, type: 'MEAL'});
         }
       });
     }
 
-    async function deleteOrder(btn, userName, mealName, keys) {
+    function deleteOrder(btn, userName, mealName) {
       Swal.fire({
         title: '確認刪除',
         html: `確定要刪除 ${userName} 的 ${mealName} 嗎？`,
@@ -212,63 +165,26 @@
         showCancelButton: true,
         confirmButtonText: '刪除',
         cancelButtonText: '取消'
-      }).then(async (result) => {
+      }).then((result) => {
         if (result.isConfirmed) {
           btn.disabled = true;
           btn.innerText = "刪除中...";
-          try {
-            // 從 Firestore 中刪除指定的文檔 ID
-            for (let key of keys) {
-              await firebaseFetch(`Sessions/${groupId}_${sessionId}/Orders/${key}`, { method: 'DELETE' });
-            }
-            Swal.fire({ icon: 'success', title: '已刪除！', timer: 800 });
-            loadHistory();
-          } catch (err) {
-            Swal.fire({ icon: 'error', title: '刪除失敗，請重試' });
-            btn.disabled = false;
-            btn.innerText = "刪除";
-          }
+          google.script.run
+            .withSuccessHandler(() => { loadHistory(); })
+            .withFailureHandler(() => { btn.disabled = false; btn.innerText = "刪除"; })
+            .deleteWebOrder(groupId, sessionId, userName, mealName, 'MEAL');
         }
       });
     }
 
-    async function loadHistory() {
-      const body = document.getElementById('history-body');
-      try {
-        // 從 Firestore 子集合載入訂單
-        const ordersList = await getCollection(`Sessions/${groupId}_${sessionId}/Orders`);
-        
-        const historyMap = {};
-        ordersList.forEach(o => {
-          const user = o.userName || o.user || "";
-          const meal = o.name || o.meal || "";
-          const price = Number(o.price || 0);
-          const type = o.type || "MEAL";
-          
-          if (type === 'MEAL') {
-            const key = `${user}|${meal}`;
-            if (!historyMap[key]) {
-              historyMap[key] = { user: user, meal: meal, price: price, qty: 1, keys: [o.id] };
-            } else {
-              historyMap[key].qty++;
-              historyMap[key].keys.push(o.id);
-            }
-          }
-        });
-        
-        const aggregated = Object.values(historyMap).sort((a, b) => a.user.localeCompare(b.user) || a.meal.localeCompare(b.meal));
-        
-        body.innerHTML = aggregated.length === 0 ? '<tr><td colspan="5">無資料</td></tr>' : aggregated.map(r => `<tr>
-          <td>${r.user}</td>
-          <td>${r.meal}</td>
-          <td style="text-align:right;">${r.qty}</td>
-          <td style="text-align:right;">$${r.price * r.qty}</td>
-          <td><button class="btn-delete" onclick="deleteOrder(this, '${r.user}', '${r.meal}', ${JSON.stringify(r.keys)})">刪除</button></td>
+    function loadHistory() {
+      google.script.run.withSuccessHandler(data => {
+        const body = document.getElementById('history-body');
+        body.innerHTML = data.length === 0 ? '<tr><td colspan="5">無資料</td></tr>' : data.map(r => `<tr>
+          <td>${r.user}</td><td>${r.meal}</td><td style="text-align:right;">${r.qty}</td><td style="text-align:right;">$${r.price * r.qty}</td>
+          <td><button class="btn-delete" onclick="deleteOrder(this, '${r.user}', '${r.meal}')">刪除</button></td>
         </tr>`).join('');
-      } catch (err) {
-        console.error(err);
-        body.innerHTML = '<tr><td colspan="5">載入歷史紀錄失敗</td></tr>';
-      }
+      }).getCurrentOrders(groupId, sessionId, 'MEAL');
     }
   </script>
 </body>
