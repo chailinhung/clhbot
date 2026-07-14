@@ -63,7 +63,7 @@
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script>
     // 🔔 1. 請在此處替換成你部署好的 Google Apps Script 網路應用程式 URL
-    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzi10-r0peJARUqFQhHES3Q1qdkjgBghm1HlnwjHsNC0vpdGUP2tilKroOAjZArzTcPVQ/exec";
+    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzhUln6Pkz83tH0tgZo43QNqbDutANsa0Jzrov-qspv5Zk-nJG8s_nc1_XirMW8pZsTxw/exec";
 
     // 🔔 2. 宣告原本由 GAS 傳入的變數，現在改為從網址參數（Query URL）讀取
     let shopName = "";
