@@ -2,7 +2,6 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>訂餐</title>
   <style>
     :root { --primary: #00b900; --bg: #f4f4f4; --text: #333;
@@ -90,50 +89,47 @@
     // ==========================================
     const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzhUln6Pkz83tH0tgZo43QNqbDutANsa0Jzrov-qspv5Zk-nJG8s_nc1_XirMW8pZsTxw/exec';
 
-    // 從網址參數動態取得變數
+    // 改為從 GitHub 的網址參數（Query Params）動態解析原本的變數
     const urlParams = new URLSearchParams(window.location.search);
-    const shopName = urlParams.get('shopName') || urlParams.get('shop') || "";
-    const groupId = urlParams.get('groupId') || urlParams.get('gid') || "";
-    const sessionId = urlParams.get('sessionId') || urlParams.get('sid') || "";
+    const shopName = urlParams.get('shop') || urlParams.get('shopName') || "";
+    const groupId = urlParams.get('gid') || urlParams.get('groupId') || "";
+    const sessionId = urlParams.get('sid') || urlParams.get('sessionId') || "";
     const uName = urlParams.get('uName') || "";
-    const orderType = urlParams.get('type') || "MEAL";
+    const orderType = (urlParams.get('type') || "MEAL").toUpperCase(); // 支援 MEAL 或 DRINK
 
     let globalMenu = [];
     let quantities = [];
 
     window.onload = function() {
-      if (shopName) {
-        document.getElementById('shop-title').innerText = "🏪 " + shopName;
-      }
-      if (uName) {
-        document.getElementById('userName').value = uName;
-      }
+      if (shopName) document.getElementById('shop-title').innerText = "🏪 " + shopName;
+      if (uName) document.getElementById('userName').value = uName;
       
-      // 載入歷史紀錄與菜單
+      // 1. 載入歷史紀錄 (取代 google.script.run.getCurrentOrders)
       loadHistory();
+
+      // 2. 向 GAS 後端獲取菜單 (取代原先 <?!= menuData ?> 的伺服器渲染)
       fetchMenuFromGas();
     };
 
-    // 透過 fetch 向 GAS 請求菜單資料
+    // 發送 fetch GET 請求取得菜單 JSON
     function fetchMenuFromGas() {
       if (!shopName) {
         document.getElementById('menu-list').innerHTML = '<div style="text-align:center; padding:20px; color:red;">錯誤：未指定商店名稱</div>';
         return;
       }
-
-      // 發送 GET 請求給 GAS doGet API 獲取菜單
-      const fetchUrl = `${GAS_WEB_APP_URL}?action=get_menu_json&shop=${encodeURIComponent(shopName)}&type=${orderType}`;
-
-      fetch(fetchUrl)
+      
+      const targetUrl = `${GAS_WEB_APP_URL}?action=get_menu_json&shop=${encodeURIComponent(shopName)}&type=${orderType}`;
+      
+      fetch(targetUrl)
         .then(response => response.json())
-        .then(menuData => {
-          globalMenu = menuData || [];
+        .then(data => {
+          globalMenu = data || [];
           quantities = new Array(globalMenu.length).fill(0);
           renderMenu();
         })
         .catch(err => {
           document.getElementById('menu-list').innerHTML = '<div style="text-align:center; padding:20px; color:red;">讀取菜單失敗，請重新整理</div>';
-          console.error("Fetch Menu Error: ", err);
+          console.error("Fetch menu error: ", err);
         });
     }
 
@@ -175,7 +171,8 @@
       if (!name) { Swal.fire('請先輸入姓名！'); return; }
       const orderData = [];
       quantities.forEach((q, i) => { if(q>0) orderData.push({name: globalMenu[i].name, price: globalMenu[i].price, qty: q}); });
-      if (orderData.length === 0) { Swal.fire('請選擇餐點'); return; }
+      if (orderData.length === 0) { Swal.fire('請選擇餐點'); return;
+      }
 
       let summaryText = orderData.map(o => `${o.name}*${o.qty}`).join('<br>');
       Swal.fire({
@@ -191,7 +188,7 @@
           btn.disabled = true;
           btn.innerText = "送出中...";
 
-          // 使用 POST 請求發送到 GAS 的 doPost(e)
+          // 包裝成傳統對應 doPost 的 JSON
           const payload = {
             action: "processWebOrder",
             userName: name,
@@ -201,6 +198,7 @@
             type: orderType
           };
 
+          // 向 GAS 發送 POST 請求
           fetch(`${GAS_WEB_APP_URL}?data=${encodeURIComponent(JSON.stringify(payload))}`, {
             method: 'POST'
           })
@@ -213,15 +211,16 @@
               updateTotal();
               loadHistory();
             } else {
-              Swal.fire({ icon: 'error', title: '送出失敗: ' + (resData.message || '') });
+              Swal.fire({ icon: 'error', title: '送出失敗：' + (resData.message || '') });
             }
             btn.disabled = false;
             btn.innerText = "送出訂單";
           })
           .catch(err => {
-            Swal.fire({ icon: 'error', title: '連線失敗，請再試一次' });
+            Swal.fire({ icon: 'error', title: '送出失敗，請重試' });
             btn.disabled = false;
             btn.innerText = "送出訂單";
+            console.error("Submit order error: ", err);
           });
         }
       });
@@ -258,7 +257,7 @@
             if (resData.status === "success") {
               loadHistory();
             } else {
-              Swal.fire({ icon: 'error', title: '刪除失敗: ' + (resData.message || '') });
+              Swal.fire({ icon: 'error', title: '刪除失敗：' + (resData.message || '') });
               btn.disabled = false;
               btn.innerText = "刪除";
             }
@@ -266,15 +265,16 @@
           .catch(err => {
             btn.disabled = false;
             btn.innerText = "刪除";
+            console.error("Delete order error: ", err);
           });
         }
       });
     }
 
     function loadHistory() {
-      const fetchUrl = `${GAS_WEB_APP_URL}?action=get_orders_json&gid=${encodeURIComponent(groupId)}&sid=${encodeURIComponent(sessionId)}&type=${orderType}`;
-
-      fetch(fetchUrl)
+      const targetUrl = `${GAS_WEB_APP_URL}?action=get_orders_json&gid=${encodeURIComponent(groupId)}&sid=${encodeURIComponent(sessionId)}&type=${orderType}`;
+      
+      fetch(targetUrl)
         .then(response => response.json())
         .then(data => {
           const body = document.getElementById('history-body');
