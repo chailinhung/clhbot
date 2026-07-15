@@ -18,10 +18,10 @@
         const LIFF_ID = '2010205613-GBhWoaIf'; 
 
         async function init() {
-            // 設定 5 秒強制跳轉定時器 (Timeout)
+            // 設定 5 秒強制跳轉定時器 (Timeout 防止載入卡死)
             const timeoutPromise = new Promise((resolve) => {
                 setTimeout(() => {
-                    console.log('LIFF Timeout: Redirecting with default name...');
+                    console.log('LIFF Timeout: Redirecting with default...');
                     resolve({ isTimeout: true });
                 }, 5000);
             });
@@ -31,7 +31,9 @@
                 try {
                     await liff.init({ liffId: LIFF_ID });
                     if (!liff.isLoggedIn()) {
-                        liff.login({ redirectUri: window.location.href });
+                        // 💡 登入時使用乾淨、不帶參數的網址作為 redirectUri，避免驗證失敗
+                        const cleanLoginUri = window.location.origin + window.location.pathname;
+                        liff.login({ redirectUri: cleanLoginUri });
                         return { waitLogin: true };
                     }
 
@@ -58,21 +60,19 @@
 
             if (result && result.waitLogin) return; // 如果正在跳轉登入，則不執行後續
 
+            // 整理原本帶進來的所有網址參數（例如 shop, gid, sid 等）
             const urlParams = new URLSearchParams(window.location.search);
+            
+            // 寫入從 LINE LIFF 取得的使用者姓名
             const finalName = (result && result.userName) ? result.userName : "";
             urlParams.set('uName', finalName);
             
-            // ==========================================
-            // 🎯 終極修復：直接寫死最絕對、最正確的 GitHub Pages 網址結構
-            // ==========================================
-            const type = (urlParams.get('type') || "").toUpperCase();
-            const pageFile = (type === 'DRINK') ? 'order_drink_ui.html' : 'order_ui.html';
+            // ===================================================
+            // 🎯 最直接的測試：直接寫死絕對路徑跳轉到 order_ui.html
+            // ===================================================
+            const targetUrl = 'https://chailinhung.github.io/clhbot/order_ui.html?' + urlParams.toString();
 
-            // 絕對不會出錯的目標 URL 拼法：
-            // https://chailinhung.github.io/clhbot/order_ui.html?uName=xxx...
-            const targetUrl = 'https://chailinhung.github.io/clhbot/' + pageFile + '?' + urlParams.toString();
-
-            console.log("Redirecting to: ", targetUrl);
+            console.log("Redirecting directly to: ", targetUrl);
             window.location.replace(targetUrl);
         }
         window.onload = init;
