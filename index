@@ -14,7 +14,7 @@
 <body>
     <div class="loader"></div>
     <script>
-        const LIFF_ID = '2010215507-TXivMPb5'; 
+        const LIFF_ID = '2010205613-GBhWoaIf'; 
 
         async function init() {
             // 設定 5 秒強制跳轉定時器 (Timeout)
