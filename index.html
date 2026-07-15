@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>取得訂購人名字...</title>
+    <title>讀取訂購人...</title>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <style>
         body { font-family: -apple-system, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: #f4f7f9; }
@@ -15,17 +15,17 @@
     <div class="loader"></div>
     <script>
         const LIFF_ID = '2010205613-GBhWoaIf'; 
+        
+        // 🔔 請確保此處為您後端 GAS Web App 的部署網址
+        const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzhUln6Pkz83tH0tgZo43QNqbDutANsa0Jzrov-qspv5Zk-nJG8s_nc1_XirMW8pZsTxw/exec';
+
+        // 🔔 請將此處改為您 GitHub Pages 的專案根目錄網址（尾端不加斜線）
+        const GITHUB_PAGES_BASE = 'https://chailinhung.github.io/clhbot';
 
         async function init() {
-            // 設定 5 秒強制跳轉定時器 (Timeout)
-            const timeoutPromise = new Promise((resolve) => {
-                setTimeout(() => {
-                    console.log('LIFF Timeout: Redirecting with default name...');
-                    resolve({ isTimeout: true });
-                }, 5000);
-            });
+            // 設置 5 秒超時防止 LIFF 載入卡死
+            const timeoutPromise = new Promise(resolve => setTimeout(() => resolve({ userName: "" }), 5000));
 
-            // LIFF 處理邏輯
             const liffPromise = (async () => {
                 try {
                     await liff.init({ liffId: LIFF_ID });
@@ -60,36 +60,20 @@
             const urlParams = new URLSearchParams(window.location.search);
             const finalName = result.userName || "";
             urlParams.set('uName', finalName);
-            
-            // ==========================================
-            // 🎯 修改跳轉邏輯：跳轉至同目錄下的 GitHub 點餐頁面
-            // ==========================================
-            const type = (urlParams.get('type') || "").toUpperCase();
-            const pageFile = (type === 'DRINK') ? 'order_drink_ui.html' : 'order_ui.html';
 
-            // 自動解析並保留 GitHub 專案子目錄路徑（例如：/clhbot/）
-            const currentPath = window.location.pathname; 
-            let dirPath = "/";
+            // 🎯 【關鍵分流邏輯】
+            const orderType = urlParams.get('type') || "";
 
-            const pathParts = currentPath.split('/').filter(p => p !== "");
-            if (pathParts.length > 0) {
-                // 如果最後一個節點含有 .html，則將其移除，剩下的就是目錄路徑
-                if (pathParts[pathParts.length - 1].includes('.html')) {
-                    pathParts.pop();
-                }
-                dirPath = "/" + pathParts.join('/') + "/";
+            if (orderType === 'subway_order') {
+                // 1. 如果是 subway_order，直接導回 GAS 執行原本的後端渲染
+                window.location.replace(GAS_WEB_APP_URL + '?' + urlParams.toString());
+            } else if (orderType === 'DRINK') {
+                // 2. 如果是飲料，導向 GitHub 的 order_drink_ui.html
+                window.location.replace(GITHUB_PAGES_BASE + '/order_drink_ui.html?' + urlParams.toString());
+            } else {
+                // 3. 其他狀況（一般餐點），導向 GitHub 的 order_ui.html
+                window.location.replace(GITHUB_PAGES_BASE + '/order_ui.html?' + urlParams.toString());
             }
-
-            // 若在根目錄運行，退回默認結構
-            if (dirPath === "//" || dirPath === "/") {
-                dirPath = "/clhbot/"; 
-            }
-
-            // 組合出與 index.html 相同根目錄的完整目標 URL
-            const targetUrl = window.location.origin + dirPath + pageFile + '?' + urlParams.toString();
-
-            console.log("Redirecting to target Github Page: ", targetUrl);
-            window.location.replace(targetUrl);
         }
         window.onload = init;
     </script>
