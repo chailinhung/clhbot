@@ -14,6 +14,7 @@
 <body>
     <div class="loader"></div>
     <script>
+        // 🚀 LINE LIFF ID
         const LIFF_ID = '2010205613-GBhWoaIf'; 
 
         async function init() {
@@ -61,19 +62,17 @@
             const finalName = (result && result.userName) ? result.userName : "";
             urlParams.set('uName', finalName);
             
-            // ===================================================
-            // 🎯 修正跳轉邏輯：直接強制指定 /clhbot/ 同目錄跳轉
-            // ===================================================
+            // ==========================================
+            // 🎯 終極修復：直接寫死最絕對、最正確的 GitHub Pages 網址結構
+            // ==========================================
             const type = (urlParams.get('type') || "").toUpperCase();
             const pageFile = (type === 'DRINK') ? 'order_drink_ui.html' : 'order_ui.html';
 
-            // 直接獲取當前主域名 (例如 https://chailinhung.github.io)
-            const originUrl = window.location.origin; 
-            
-            // 寫死 GitHub Pages 專案子路徑 /clhbot/，避開所有 split 算法錯誤
-            const targetUrl = originUrl + '/clhbot/' + pageFile + '?' + urlParams.toString();
+            // 絕對不會出錯的目標 URL 拼法：
+            // https://chailinhung.github.io/clhbot/order_ui.html?uName=xxx...
+            const targetUrl = 'https://chailinhung.github.io/clhbot/' + pageFile + '?' + urlParams.toString();
 
-            console.log("Redirecting to target Github Page: ", targetUrl);
+            console.log("Redirecting to: ", targetUrl);
             window.location.replace(targetUrl);
         }
         window.onload = init;
