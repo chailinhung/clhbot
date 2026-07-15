@@ -332,6 +332,27 @@
         if (!response.ok) throw new Error('網路回應不成功');
         
         const result = await response.json();
+
+        // 🎯 攔截後端回傳的檢查訂餐狀態或過期訂餐
+        if (result.status === "ERROR") {
+          Swal.fire({
+            icon: 'error',
+            title: '無法點餐',
+            text: result.msg,
+            allowOutsideClick: false,
+            confirmButtonText: '確定'
+          }).then(() => {
+            // 關閉 LIFF 視窗或網頁
+            if (typeof liff !== "undefined") {
+              liff.closeWindow();
+            } else {
+              window.close();
+            }
+          });
+          document.getElementById('menu-list').innerHTML = `<div style="text-align:center; padding:10px; color:red; font-size:1.1rem;">${result.msg}</div>`;
+          return;
+        }
+        
         globalMenu = result.menu || [];
         
         // 渲染菜單
