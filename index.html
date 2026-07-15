@@ -23,6 +23,29 @@
         const GITHUB_PAGES_BASE = 'https://chailinhung.github.io/clhbot';
 
         async function init() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const orderType = urlParams.get('type') || "MEAL";
+            const gid = urlParams.get('gid') || "";
+            const sid = urlParams.get('sid') || "";
+            const shop = urlParams.get('shop') || "";
+
+            // 🎯 【第一步：安全檢查】(Subway 以外的點餐，在登入前就去問 GAS 這團能不能開)
+            if (orderType !== 'subway_order') {
+                try {
+                    const checkUrl = `${GAS_WEB_APP_URL}?action=check_config&gid=${gid}&sid=${sid}&type=${orderType}&shop=${encodeURIComponent(shop)}`;
+                    const checkRes = await fetch(checkUrl);
+                    const checkData = await checkRes.json();
+
+                    if (checkData.status === "ERROR") {
+                        // ❌ 狀態不正確：直接中斷，顯示警示訊息，完全不跑 LIFF 登入流程
+                        showError(checkData.msg);
+                        return; 
+                    }
+                } catch (err) {
+                    console.error("安全檢查網路失敗，預設放行並交由後端處理:", err);
+                }
+            }
+            
             // 設置 5 秒超時防止 LIFF 載入卡死
             const timeoutPromise = new Promise(resolve => setTimeout(() => resolve({ userName: "" }), 5000));
 
@@ -75,6 +98,17 @@
                 window.location.replace(GITHUB_PAGES_BASE + '/order_ui.html?' + urlParams.toString());
             }
         }
+        
+        // 顯示錯誤畫面輔助函數
+        function showError(message) {
+            const container = document.getElementById('status-container');
+            container.className = "error-box"; // 移除旋轉動畫
+            container.innerHTML = `
+                <div class="error-title">⚠️ 無法進行訂餐</div>
+                <div style="font-size: 1.1rem; color: #555; line-height: 1.5;">${message}</div>
+            `;
+        }
+        
         window.onload = init;
     </script>
 </body>
