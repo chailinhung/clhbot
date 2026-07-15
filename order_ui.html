@@ -2,39 +2,193 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>訂餐</title>
   <style>
-    :root { --primary: #00b900; --bg: #f4f4f4; --text: #333; }
-    body { font-family: sans-serif; padding: 5px; background: var(--bg); color: var(--text); font-size: 25px; margin: 0; }
-    .card { background: white; border-radius: 10px; padding: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 10px; }
-    h2 { color: var(--primary); text-align: center; margin: 0 0 10px 0; font-size: 2.125rem; }
-    .input-group { margin-bottom: 10px; }
-    label { display: block; font-weight: 600; margin-bottom: 0; font-size: 1.625rem; }
-    input[type="text"] { width: 100%; padding: 7.5px; border: 2.5px solid #ddd; border-radius: 5px; box-sizing: border-box; font-size: 1.875rem; }
+    :root { 
+      --primary: #00b900; 
+      --bg: #f4f4f4; 
+      --text: #333; 
+    }
     
-    .menu-item { display: flex; align-items: center; padding: 7.5px 0; border-bottom: 2.5px solid #f9f9f9; }
-    .item-info { flex: 1; min-width: 0; overflow: hidden; }
-    .item-name { font-weight: 600; font-size: 2rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .item-price { color: #666; font-size: 1.625rem; }
-    .qty-controls { display: flex; align-items: center; gap: 5px; }
-    .btn-qty { background: #eee; border: 2.5px solid #ccc; width: 50px; height: 50px; border-radius: 50%; font-size: 2rem; cursor: pointer; }
-    .qty-val { width: 50px; text-align: center; font-weight: bold; font-size: 2rem; }
+    /* 🎯 降低手機預設字體大小，避免塞爆螢幕，電腦版維持舒適大小 */
+    body { 
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+      padding: 8px; 
+      background: var(--bg); 
+      color: var(--text); 
+      font-size: 16px; /* 修正原本 25px 過大的問題 */
+      margin: 0; 
+      line-height: 1.4;
+    }
     
-    .btn-submit { background: var(--primary); color: white; border: none; padding: 12.5px; border-radius: 25px; font-size: 2rem; font-weight: 600; width: 100%; margin-top: 10px; }
-    .btn-submit:disabled { background: #999; }
+    .card { 
+      background: white; 
+      border-radius: 10px; 
+      padding: 12px; 
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1); 
+      margin-bottom: 10px; 
+      box-sizing: border-box;
+    }
     
-    table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 1.75rem; table-layout: fixed; }
-    th, td { padding: 5px 2.5px; border-bottom: 2.5px solid #eee; overflow: hidden; }
-    th:nth-child(1), td:nth-child(1) { width: 5.5em; text-align: left; }
-    th:nth-child(2), td:nth-child(2) { text-align: left; }
-    th:nth-child(3), td:nth-child(3) { width: 2em; text-align: right; }
-    th:nth-child(4), td:nth-child(4) { width: 3em; text-align: right; }
-    th:nth-child(5), td:nth-child(5) { width: 3.5em; text-align: center; }
-    .btn-delete { background: #fcc; color: #a00; border: 2.5px solid #a00; padding: 0 10px; border-radius: 10px; font-size: 1.625rem; }
-    .btn-delete:disabled { background: #eee; border-color: #ccc; color: #999; }
+    /* 🎯 標題調整為適當的大小 */
+    h2 { 
+      color: var(--primary); 
+      text-align: center; 
+      margin: 0 0 12px 0; 
+      font-size: 1.5rem; /* 修正為適合手機與電腦閱讀的 24px */
+    }
     
-    .large-swal { font-size: 2rem !important; width: 90% !important; }
+    .input-group { 
+      margin-bottom: 12px; 
+    }
+    
+    label { 
+      display: block; 
+      font-weight: 600; 
+      margin-bottom: 6px; 
+      font-size: 1.05rem; 
+    }
+    
+    input[type="text"] { 
+      width: 100%; 
+      padding: 10px; 
+      border: 2px solid #ddd; 
+      border-radius: 6px; 
+      box-sizing: border-box; 
+      font-size: 1.15rem; 
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    input[type="text"]:focus {
+      border-color: var(--primary);
+    }
+    
+    /* 菜單列表優化 */
+    .menu-item { 
+      display: flex; 
+      align-items: center; 
+      padding: 10px 0; 
+      border-bottom: 1.5px solid #f0f0f0; 
+    }
+    
+    .item-info { 
+      flex: 1; 
+      min-width: 0; 
+      padding-right: 10px;
+    }
+    
+    .item-name { 
+      font-weight: 600; 
+      font-size: 1.2rem; 
+      white-space: nowrap; 
+      overflow: hidden; 
+      text-overflow: ellipsis; 
+    }
+    
+    .item-price { 
+      color: #666; 
+      font-size: 1rem; 
+      margin-top: 2px;
+    }
+    
+    /* 按鈕與數量控制優化，防止在寬度不足的手機上跑版 */
+    .qty-controls { 
+      display: flex; 
+      align-items: center; 
+      gap: 8px; 
+      flex-shrink: 0; 
+    }
+    
+    .btn-qty { 
+      background: #f5f5f5; 
+      border: 1px solid #ccc; 
+      width: 40px; /* 從原本 50px 縮小至最適合手機觸碰的 40px */
+      height: 40px; 
+      border-radius: 50%; 
+      font-size: 1.4rem; 
+      cursor: pointer; 
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      transition: background 0.2s;
+    }
+    .btn-qty:active {
+      background: #ddd;
+    }
+    
+    .qty-val { 
+      width: 30px; 
+      text-align: center; 
+      font-weight: bold; 
+      font-size: 1.25rem; 
+    }
+    
+    .btn-submit { 
+      background: var(--primary); 
+      color: white; 
+      border: none; 
+      padding: 14px; 
+      border-radius: 25px; 
+      font-size: 1.25rem; 
+      font-weight: 600; 
+      width: 100%; 
+      margin-top: 10px; 
+      cursor: pointer;
+      box-shadow: 0 2px 4px rgba(0,185,0,0.2);
+    }
+    .btn-submit:disabled { 
+      background: #ccc; 
+      box-shadow: none;
+      cursor: not-allowed;
+    }
+    
+    /* 🎯 歷史訂單表格 RWD 手機版自適應優化 */
+    table { 
+      width: 100%; 
+      border-collapse: collapse; 
+      margin-top: 10px; 
+      font-size: 0.95rem; /* 修正原本 1.75rem 太大塞爆表格的問題 */
+      table-layout: fixed; 
+    }
+    
+    th, td { 
+      padding: 8px 4px; 
+      border-bottom: 1.5px solid #eee; 
+      overflow: hidden; 
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    th {
+      font-weight: bold;
+      background-color: #f9f9f9;
+    }
+    th:nth-child(1), td:nth-child(1) { width: 25%; text-align: left; } /* 人名 */
+    th:nth-child(2), td:nth-child(2) { width: 35%; text-align: left; } /* 餐點 */
+    th:nth-child(3), td:nth-child(3) { width: 12%; text-align: right; } /* 數 */
+    th:nth-child(4), td:nth-child(4) { width: 15%; text-align: right; } /* 金額 */
+    th:nth-child(5), td:nth-child(5) { width: 13%; text-align: center; } /* 刪除按鈕 */
+    
+    .btn-delete { 
+      background: #fff0f0; 
+      color: #a00; 
+      border: 1px solid #a00; 
+      padding: 4px 6px; 
+      border-radius: 6px; 
+      font-size: 0.8rem; 
+      cursor: pointer;
+    }
+    .btn-delete:disabled { 
+      background: #eee; 
+      border-color: #ccc; 
+      color: #999; 
+    }
+    
+    /* 彈出視窗字體適度調整 */
+    .large-swal { 
+      font-size: 1.2rem !important; 
+      width: 90% !important; 
+    }
   </style>
 </head>
 <body>
@@ -48,12 +202,12 @@
     <div id="menu-list">
       <div style="text-align:center; padding:20px;">正在讀取菜單...</div>
     </div>
-    <div style="margin-top:15px; font-size: 2.5rem; font-weight: bold; color: #d32f2f; text-align: right;">總計：$<span id="total-price">0</span></div>
+    <div style="margin-top:15px; font-size: 1.6rem; font-weight: bold; color: #d32f2f; text-align: right;">總計：$<span id="total-price">0</span></div>
     <button type="button" id="submitBtn" class="btn-submit" onclick="submitForm()">送出訂單</button>
   </div>
 
   <div class="card">
-    <h2 style="font-size: 2.125rem;">📊 目前訂單明細</h2>
+    <h2>📊 目前訂單明細</h2>
     <table>
       <thead><tr><th>人名</th><th>餐點</th><th>數</th><th>金額</th><th>操作</th></tr></thead>
       <tbody id="history-body"><tr><td colspan="5">載入中...</td></tr></tbody>
