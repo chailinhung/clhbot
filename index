@@ -64,30 +64,9 @@
 
             // 根據點餐類型動態跳轉至對應的 GitHub 頁面 (order_ui 或 order_drink_ui)
             const type = (urlParams.get('type') || "").toUpperCase();
+            const currentPath = window.location.pathname;
+            const dirPath = currentPath.substring(0, currentPath.lastIndexOf('/') + 1);
             const pageFile = (type === 'DRINK') ? 'order_drink_ui.html' : 'order_ui.html';
-
-            // ==========================================
-            // 【安全路徑修正】防止 GitHub 專案名稱丟失
-            // ==========================================
-            const currentPath = window.location.pathname; // 例如 "/clhbot/index.html" 或 "/clhbot"
-            let dirPath = "/";
-
-            // 取得路徑中的專案名稱 (以 "/clhbot/" 為例，即指第一個路徑節點)
-            const pathParts = currentPath.split('/').filter(p => p !== "");
-            
-            if (pathParts.length > 0) {
-                // 如果最後一個節點是 .html，則移除它，其餘保留作為專案目錄
-                if (pathParts[pathParts.length - 1].includes('.html')) {
-                    pathParts.pop();
-                }
-                dirPath = "/" + pathParts.join('/') + "/";
-            }
-
-            // 如果解析出來空空如也，強制回退為專案主目錄格式
-            if (dirPath === "//" || dirPath === "/") {
-                dirPath = "/clhbot/"; // 這裡手動強制寫入你的專案資料夾名稱，絕對不會再走失！
-            }
-
             const targetUrl = window.location.origin + dirPath + pageFile + '?' + urlParams.toString();
 
             window.location.replace(targetUrl);
