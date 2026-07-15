@@ -64,7 +64,7 @@
             // 🎯 【關鍵分流邏輯】
             const orderType = urlParams.get('type') || "";
 
-            if (orderType === 'subway_order') {
+            if (orderType === 'SUBWAY') {
                 // 1. 如果是 subway_order，直接導回 GAS 執行原本的後端渲染
                 window.location.replace(GAS_WEB_APP_URL + '?' + urlParams.toString());
             } else if (orderType === 'DRINK') {
