@@ -11,76 +11,75 @@
       --text: #333; 
     }
     
-    /* 🎯 降低手機預設字體大小，避免塞爆螢幕，電腦版維持舒適大小 */
+    /* 🎯 縮減至極致小比例字體與緊湊間距 */
     body { 
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
-      padding: 8px; 
+      padding: 4px; /* 減半 */
       background: var(--bg); 
       color: var(--text); 
-      font-size: 16px; /* 修正原本 25px 過大的問題 */
+      font-size: 12px; /* 基礎字型縮小（原本 16px/25px） */
       margin: 0; 
-      line-height: 1.4;
+      line-height: 1.2;
     }
     
     .card { 
       background: white; 
-      border-radius: 10px; 
-      padding: 12px; 
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1); 
-      margin-bottom: 10px; 
+      border-radius: 6px; /* 縮小圓角 */
+      padding: 6px; /* 間距減半 */
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1); 
+      margin-bottom: 6px; 
       box-sizing: border-box;
     }
     
-    /* 🎯 標題調整為適當的大小 */
+    /* 🎯 標題縮小 */
     h2 { 
       color: var(--primary); 
       text-align: center; 
-      margin: 0 0 12px 0; 
-      font-size: 1.5rem; /* 修正為適合手機與電腦閱讀的 24px */
+      margin: 0 0 6px 0; 
+      font-size: 1.1rem; /* 大幅縮小 */
     }
     
     .input-group { 
-      margin-bottom: 12px; 
+      margin-bottom: 6px; 
     }
     
     label { 
       display: block; 
       font-weight: 600; 
-      margin-bottom: 6px; 
-      font-size: 1.05rem; 
+      margin-bottom: 3px; 
+      font-size: 0.85rem; 
     }
     
     input[type="text"] { 
       width: 100%; 
-      padding: 10px; 
-      border: 2px solid #ddd; 
-      border-radius: 6px; 
+      padding: 5px; /* 縮小內距 */
+      border: 1.5px solid #ddd; 
+      border-radius: 4px; 
       box-sizing: border-box; 
-      font-size: 1.15rem; 
+      font-size: 0.9rem; 
       outline: none;
-      transition: border-color 0.2s;
     }
     input[type="text"]:focus {
       border-color: var(--primary);
     }
     
-    /* 菜單列表優化 */
+    /* 菜單列表緊湊化 */
     .menu-item { 
       display: flex; 
       align-items: center; 
-      padding: 10px 0; 
-      border-bottom: 1.5px solid #f0f0f0; 
+      padding: 5px 0; /* 高度縮小 */
+      border-bottom: 1px solid #f0f0f0; 
     }
     
     .item-info { 
       flex: 1; 
       min-width: 0; 
-      padding-right: 10px;
+      padding-right: 5px;
     }
     
     .item-name { 
       font-weight: 600; 
-      font-size: 1.2rem; 
+      font-size: 0.95rem; /* 字體縮小 */
       white-space: nowrap; 
       overflow: hidden; 
       text-overflow: ellipsis; 
@@ -88,73 +87,71 @@
     
     .item-price { 
       color: #666; 
-      font-size: 1rem; 
-      margin-top: 2px;
+      font-size: 0.8rem; 
+      margin-top: 1px;
     }
     
-    /* 按鈕與數量控制優化，防止在寬度不足的手機上跑版 */
+    /* 數量控制按鈕縮小 50% */
     .qty-controls { 
       display: flex; 
       align-items: center; 
-      gap: 8px; 
+      gap: 4px; 
       flex-shrink: 0; 
     }
     
     .btn-qty { 
       background: #f5f5f5; 
       border: 1px solid #ccc; 
-      width: 40px; /* 從原本 50px 縮小至最適合手機觸碰的 40px */
-      height: 40px; 
+      width: 26px; /* 尺寸大幅縮小（原本 40px/50px） */
+      height: 26px; 
       border-radius: 50%; 
-      font-size: 1.4rem; 
+      font-size: 1rem; 
       cursor: pointer; 
       display: flex;
       justify-content: center;
       align-items: center;
-      transition: background 0.2s;
     }
     .btn-qty:active {
       background: #ddd;
     }
     
     .qty-val { 
-      width: 30px; 
+      width: 18px; 
       text-align: center; 
       font-weight: bold; 
-      font-size: 1.25rem; 
+      font-size: 0.95rem; 
     }
     
+    /* 提交按鈕縮小 */
     .btn-submit { 
       background: var(--primary); 
       color: white; 
       border: none; 
-      padding: 14px; 
-      border-radius: 25px; 
-      font-size: 1.25rem; 
+      padding: 8px; /* 縮小高度 */
+      border-radius: 15px; 
+      font-size: 0.95rem; 
       font-weight: 600; 
       width: 100%; 
-      margin-top: 10px; 
+      margin-top: 6px; 
       cursor: pointer;
-      box-shadow: 0 2px 4px rgba(0,185,0,0.2);
     }
     .btn-submit:disabled { 
       background: #ccc; 
-      box-shadow: none;
       cursor: not-allowed;
     }
     
-    /* 🎯 歷史訂單表格 RWD 手機版自適應優化 */
+    /* 🎯 歷史明細表格極致精簡 */
     table { 
       width: 100%; 
       border-collapse: collapse; 
-      margin-top: 10px; 
-      font-size: 0.95rem; /* 修正原本 1.75rem 太大塞爆表格的問題 */
+      margin-top: 6px; 
+      font-size: 0.8rem; /* 字體縮小 */
       table-layout: fixed; 
     }
     
     th, td { 
-      padding: 8px 4px; 
-      border-bottom: 1.5px solid #eee; 
+      padding: 4px 2px; /* 減至極小間距 */
+      border-bottom: 1px solid #eee; 
       overflow: hidden; 
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -163,19 +160,20 @@
       font-weight: bold;
       background-color: #f9f9f9;
     }
-    th:nth-child(1), td:nth-child(1) { width: 25%; text-align: left; } /* 人名 */
-    th:nth-child(2), td:nth-child(2) { width: 35%; text-align: left; } /* 餐點 */
-    th:nth-child(3), td:nth-child(3) { width: 12%; text-align: right; } /* 數 */
+    th:nth-child(1), td:nth-child(1) { width: 22%; text-align: left; } /* 人名 */
+    th:nth-child(2), td:nth-child(2) { width: 38%; text-align: left; } /* 餐點 */
+    th:nth-child(3), td:nth-child(3) { width: 10%; text-align: right; } /* 數 */
     th:nth-child(4), td:nth-child(4) { width: 15%; text-align: right; } /* 金額 */
-    th:nth-child(5), td:nth-child(5) { width: 13%; text-align: center; } /* 刪除按鈕 */
+    th:nth-child(5), td:nth-child(5) { width: 15%; text-align: center; } /* 刪除 */
     
+    /* 刪除按鈕極致縮小 */
     .btn-delete { 
       background: #fff0f0; 
       color: #a00; 
       border: 1px solid #a00; 
-      padding: 4px 6px; 
-      border-radius: 6px; 
-      font-size: 0.8rem; 
+      padding: 1px 4px; 
+      border-radius: 4px; 
+      font-size: 0.7rem; 
       cursor: pointer;
     }
     .btn-delete:disabled { 
@@ -186,7 +184,7 @@
     
     /* 彈出視窗字體適度調整 */
     .large-swal { 
-      font-size: 1.2rem !important; 
+      font-size: 0.95rem !important; 
       width: 90% !important; 
     }
   </style>
@@ -200,9 +198,9 @@
     </div>
 
     <div id="menu-list">
-      <div style="text-align:center; padding:20px;">正在讀取菜單...</div>
+      <div style="text-align:center; padding:10px;">正在讀取菜單...</div>
     </div>
-    <div style="margin-top:15px; font-size: 1.6rem; font-weight: bold; color: #d32f2f; text-align: right;">總計：$<span id="total-price">0</span></div>
+    <div style="margin-top:8px; font-size: 1.1rem; font-weight: bold; color: #d32f2f; text-align: right;">總計：$<span id="total-price">0</span></div>
     <button type="button" id="submitBtn" class="btn-submit" onclick="submitForm()">送出訂單</button>
   </div>
 
@@ -259,14 +257,14 @@
         renderHistoryTable(result.history || []);
       } catch (error) {
         console.error('初始化失敗:', error);
-        document.getElementById('menu-list').innerHTML = '<div style="text-align:center; padding:20px; color:red;">無法載入菜單，請重新開啟頁面</div>';
+        document.getElementById('menu-list').innerHTML = '<div style="text-align:center; padding:10px; color:red;">無法載入菜單，請重新開啟頁面</div>';
       }
     }
 
     function renderMenu() {
       const list = document.getElementById('menu-list');
       if (globalMenu.length === 0) {
-        list.innerHTML = '<div style="text-align:center; padding:20px;">此商店尚無菜單資料</div>';
+        list.innerHTML = '<div style="text-align:center; padding:10px;">此商店尚無菜單資料</div>';
         return;
       }
       list.innerHTML = globalMenu.map((item, index) => `
@@ -328,7 +326,6 @@
           };
 
           try {
-            // 使用 POST 發送點餐資料（以 URLSearchParams 編碼以避免跨網域 CORS 問題）
             const response = await fetch(GAS_WEB_APP_URL, {
               method: 'POST',
               body: new URLSearchParams({ data: JSON.stringify(payload) })
