@@ -14,8 +14,7 @@
 <body>
     <div class="loader"></div>
     <script>
-        const LIFF_ID = '2010205613-GBhWoaIf'; 
-        // 🚀 已移除不需使用的 GAS 網址變數，此頁保持純前端運行，直接將資料交棒給下一頁的 Firestore SDK 處理。
+        const LIFF_ID = '2010215507-TXivMPb5'; 
 
         async function init() {
             // 設定 5 秒強制跳轉定時器 (Timeout)
@@ -61,14 +60,35 @@
             const urlParams = new URLSearchParams(window.location.search);
             const finalName = result.userName || "";
             urlParams.set('uName', finalName);
-
-            // 根據點餐類型動態跳轉至對應的 GitHub 頁面 (order_ui 或 order_drink_ui)
+            
+            // ==========================================
+            // 🎯 修改跳轉邏輯：跳轉至同目錄下的 GitHub 點餐頁面
+            // ==========================================
             const type = (urlParams.get('type') || "").toUpperCase();
-            const currentPath = window.location.pathname;
-            const dirPath = currentPath.substring(0, currentPath.lastIndexOf('/') + 1);
             const pageFile = (type === 'DRINK') ? 'order_drink_ui.html' : 'order_ui.html';
+
+            // 自動解析並保留 GitHub 專案子目錄路徑（例如：/clhbot/）
+            const currentPath = window.location.pathname; 
+            let dirPath = "/";
+
+            const pathParts = currentPath.split('/').filter(p => p !== "");
+            if (pathParts.length > 0) {
+                // 如果最後一個節點含有 .html，則將其移除，剩下的就是目錄路徑
+                if (pathParts[pathParts.length - 1].includes('.html')) {
+                    pathParts.pop();
+                }
+                dirPath = "/" + pathParts.join('/') + "/";
+            }
+
+            // 若在根目錄運行，退回默認結構
+            if (dirPath === "//" || dirPath === "/") {
+                dirPath = "/clhbot/"; 
+            }
+
+            // 組合出與 index.html 相同根目錄的完整目標 URL
             const targetUrl = window.location.origin + dirPath + pageFile + '?' + urlParams.toString();
 
+            console.log("Redirecting to target Github Page: ", targetUrl);
             window.location.replace(targetUrl);
         }
         window.onload = init;
