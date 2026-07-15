@@ -4,59 +4,37 @@
   <meta charset="UTF-8">
   <title>訂餐</title>
   <style>
-    :root { --primary: #00b900; --bg: #f4f4f4; --text: #333;
-    }
-    body { font-family: sans-serif; padding: 5px; background: var(--bg); color: var(--text); font-size: 25px; margin: 0;
-    }
-    .card { background: white; border-radius: 10px; padding: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 10px;
-    }
-    h2 { color: var(--primary); text-align: center; margin: 0 0 10px 0; font-size: 2.125rem;
-    }
+    :root { --primary: #00b900; --bg: #f4f4f4; --text: #333; }
+    body { font-family: sans-serif; padding: 5px; background: var(--bg); color: var(--text); font-size: 25px; margin: 0; }
+    .card { background: white; border-radius: 10px; padding: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 10px; }
+    h2 { color: var(--primary); text-align: center; margin: 0 0 10px 0; font-size: 2.125rem; }
     .input-group { margin-bottom: 10px; }
-    label { display: block; font-weight: 600; margin-bottom: 0;
-    font-size: 1.625rem; }
-    input[type="text"] { width: 100%; padding: 7.5px; border: 2.5px solid #ddd; border-radius: 5px; box-sizing: border-box;
-    font-size: 1.875rem; }
+    label { display: block; font-weight: 600; margin-bottom: 0; font-size: 1.625rem; }
+    input[type="text"] { width: 100%; padding: 7.5px; border: 2.5px solid #ddd; border-radius: 5px; box-sizing: border-box; font-size: 1.875rem; }
     
-    .menu-item { display: flex; align-items: center; padding: 7.5px 0;
-    border-bottom: 2.5px solid #f9f9f9; }
-    .item-info { flex: 1; min-width: 0; overflow: hidden;
-    }
-    .item-name { font-weight: 600; font-size: 2rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
+    .menu-item { display: flex; align-items: center; padding: 7.5px 0; border-bottom: 2.5px solid #f9f9f9; }
+    .item-info { flex: 1; min-width: 0; overflow: hidden; }
+    .item-name { font-weight: 600; font-size: 2rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .item-price { color: #666; font-size: 1.625rem; }
-    .qty-controls { display: flex; align-items: center;
-    gap: 5px; }
-    .btn-qty { background: #eee; border: 2.5px solid #ccc; width: 50px; height: 50px; border-radius: 50%;
-    font-size: 2rem; cursor: pointer; }
-    .qty-val { width: 50px; text-align: center; font-weight: bold; font-size: 2rem;
-    }
+    .qty-controls { display: flex; align-items: center; gap: 5px; }
+    .btn-qty { background: #eee; border: 2.5px solid #ccc; width: 50px; height: 50px; border-radius: 50%; font-size: 2rem; cursor: pointer; }
+    .qty-val { width: 50px; text-align: center; font-weight: bold; font-size: 2rem; }
     
-    .btn-submit { background: var(--primary); color: white; border: none; padding: 12.5px; border-radius: 25px;
-    font-size: 2rem; font-weight: 600; width: 100%; margin-top: 10px; }
-    .btn-submit:disabled { background: #999;
-    }
+    .btn-submit { background: var(--primary); color: white; border: none; padding: 12.5px; border-radius: 25px; font-size: 2rem; font-weight: 600; width: 100%; margin-top: 10px; }
+    .btn-submit:disabled { background: #999; }
     
-    table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 1.75rem; table-layout: fixed;
-    }
-    th, td { padding: 5px 2.5px; border-bottom: 2.5px solid #eee; overflow: hidden;
-    }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 1.75rem; table-layout: fixed; }
+    th, td { padding: 5px 2.5px; border-bottom: 2.5px solid #eee; overflow: hidden; }
     th:nth-child(1), td:nth-child(1) { width: 5.5em; text-align: left; }
-    th:nth-child(2), td:nth-child(2) { text-align: left;
-    }
+    th:nth-child(2), td:nth-child(2) { text-align: left; }
     th:nth-child(3), td:nth-child(3) { width: 2em; text-align: right; }
-    th:nth-child(4), td:nth-child(4) { width: 3em;
-    text-align: right; }
-    th:nth-child(5), td:nth-child(5) { width: 3.5em; text-align: center;
-    }
-    .btn-delete { background: #fcc; color: #a00; border: 2.5px solid #a00; padding: 0 10px; border-radius: 10px;
-    font-size: 1.625rem; }
-    .btn-delete:disabled { background: #eee; border-color: #ccc; color: #999;
-    }
+    th:nth-child(4), td:nth-child(4) { width: 3em; text-align: right; }
+    th:nth-child(5), td:nth-child(5) { width: 3.5em; text-align: center; }
+    .btn-delete { background: #fcc; color: #a00; border: 2.5px solid #a00; padding: 0 10px; border-radius: 10px; font-size: 1.625rem; }
+    .btn-delete:disabled { background: #eee; border-color: #ccc; color: #999; }
     
     /* 2倍大彈窗樣式 */
-    .large-swal { font-size: 2rem !important;
-    width: 90% !important; }
+    .large-swal { font-size: 2rem !important; width: 90% !important; }
   </style>
 </head>
 <body>
@@ -83,19 +61,14 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="config.js"></script>
   <script>
-    // ==========================================
-    // 🔑 您的 GAS 網頁應用程式 (Web App) 部署網址
-    // ==========================================
-    const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzhUln6Pkz83tH0tgZo43QNqbDutANsa0Jzrov-qspv5Zk-nJG8s_nc1_XirMW8pZsTxw/exec';
-
-    // 改為從 GitHub 的網址參數（Query Params）動態解析原本的變數
+    // 從網址參數中獲取點餐設定，取代原本的 GAS 模板變數
     const urlParams = new URLSearchParams(window.location.search);
-    const shopName = urlParams.get('shop') || urlParams.get('shopName') || "";
-    const groupId = urlParams.get('gid') || urlParams.get('groupId') || "";
-    const sessionId = urlParams.get('sid') || urlParams.get('sessionId') || "";
+    const shopName = urlParams.get('shop') || "";
+    const groupId = urlParams.get('gid') || "";
+    const sessionId = urlParams.get('sid') || "";
     const uName = urlParams.get('uName') || "";
-    const orderType = (urlParams.get('type') || "MEAL").toUpperCase(); // 支援 MEAL 或 DRINK
 
     let globalMenu = [];
     let quantities = [];
@@ -104,33 +77,28 @@
       if (shopName) document.getElementById('shop-title').innerText = "🏪 " + shopName;
       if (uName) document.getElementById('userName').value = uName;
       
-      // 1. 載入歷史紀錄 (取代 google.script.run.getCurrentOrders)
+      loadMenu();
       loadHistory();
-
-      // 2. 向 GAS 後端獲取菜單 (取代原先 <?!= menuData ?> 的伺服器渲染)
-      fetchMenuFromGas();
     };
 
-    // 發送 fetch GET 請求取得菜單 JSON
-    function fetchMenuFromGas() {
-      if (!shopName) {
-        document.getElementById('menu-list').innerHTML = '<div style="text-align:center; padding:20px; color:red;">錯誤：未指定商店名稱</div>';
-        return;
+    // 從 Firebase 獲取該商店的菜單
+    async function loadMenu() {
+      const menuList = document.getElementById('menu-list');
+      try {
+        const shops = await getCollection('shops');
+        const menuItems = shops.filter(r => (r.shopName === shopName || r["商店名稱"] === shopName) && (r.type === 'MEAL' || r["類型"] === 'MEAL'));
+        
+        globalMenu = menuItems.map(item => ({
+          name: item.name || item["餐點名稱"] || "",
+          price: Number(item.price || item["價格"] || 0)
+        }));
+
+        quantities = new Array(globalMenu.length).fill(0);
+        renderMenu();
+      } catch (err) {
+        console.error(err);
+        menuList.innerHTML = '<div style="text-align:center; color:red; padding:20px;">載入菜單失敗，請確認 Firebase 設定</div>';
       }
-      
-      const targetUrl = `${GAS_WEB_APP_URL}?action=get_menu_json&shop=${encodeURIComponent(shopName)}&type=${orderType}`;
-      
-      fetch(targetUrl)
-        .then(response => response.json())
-        .then(data => {
-          globalMenu = data || [];
-          quantities = new Array(globalMenu.length).fill(0);
-          renderMenu();
-        })
-        .catch(err => {
-          document.getElementById('menu-list').innerHTML = '<div style="text-align:center; padding:20px; color:red;">讀取菜單失敗，請重新整理</div>';
-          console.error("Fetch menu error: ", err);
-        });
     }
 
     function renderMenu() {
@@ -169,10 +137,9 @@
     function submitForm() {
       const name = document.getElementById('userName').value.trim();
       if (!name) { Swal.fire('請先輸入姓名！'); return; }
-      const orderData = [];
+      const orderData = []; 
       quantities.forEach((q, i) => { if(q>0) orderData.push({name: globalMenu[i].name, price: globalMenu[i].price, qty: q}); });
-      if (orderData.length === 0) { Swal.fire('請選擇餐點'); return;
-      }
+      if (orderData.length === 0) { Swal.fire('請選擇餐點'); return; }
 
       let summaryText = orderData.map(o => `${o.name}*${o.qty}`).join('<br>');
       Swal.fire({
@@ -182,51 +149,46 @@
         showCancelButton: true,
         confirmButtonText: '確定送出',
         cancelButtonText: '取消'
-      }).then((result) => {
+      }).then(async (result) => {
         if (result.isConfirmed) {
           const btn = document.getElementById('submitBtn');
           btn.disabled = true;
           btn.innerText = "送出中...";
 
-          // 包裝成傳統對應 doPost 的 JSON
-          const payload = {
-            action: "processWebOrder",
-            userName: name,
-            groupId: groupId,
-            sessionId: sessionId,
-            orderData: orderData,
-            type: orderType
-          };
-
-          // 向 GAS 發送 POST 請求
-          fetch(`${GAS_WEB_APP_URL}?data=${encodeURIComponent(JSON.stringify(payload))}`, {
-            method: 'POST'
-          })
-          .then(res => res.json())
-          .then(resData => {
-            if (resData.status === "success") {
-              Swal.fire({ icon: 'success', title: '送出成功！', timer: 1000 });
-              quantities.fill(0); 
-              globalMenu.forEach((_, i) => document.getElementById('qty-'+i).innerText='0'); 
-              updateTotal();
-              loadHistory();
-            } else {
-              Swal.fire({ icon: 'error', title: '送出失敗：' + (resData.message || '') });
+          try {
+            // 將訂單逐項寫入 Firestore Subcollection
+            for (let item of orderData) {
+              for (let i = 0; i < item.qty; i++) {
+                await firebaseFetch(`Sessions/${groupId}_${sessionId}/Orders`, {
+                  method: 'POST',
+                  payload: {
+                    time: new Date().toISOString(),
+                    groupId: groupId,
+                    userName: name,
+                    name: item.name,
+                    price: item.price,
+                    type: 'MEAL'
+                  }
+                });
+              }
             }
+            Swal.fire({ icon: 'success', title: '送出成功！', timer: 1000 });
+            quantities.fill(0); 
+            globalMenu.forEach((_, i) => document.getElementById('qty-'+i).innerText='0'); 
+            updateTotal();
+            loadHistory();
             btn.disabled = false;
             btn.innerText = "送出訂單";
-          })
-          .catch(err => {
-            Swal.fire({ icon: 'error', title: '送出失敗，請重試' });
+          } catch (err) {
+            Swal.fire({ icon: 'error', title: '送出失敗，請再試一次' });
             btn.disabled = false;
             btn.innerText = "送出訂單";
-            console.error("Submit order error: ", err);
-          });
+          }
         }
       });
     }
 
-    function deleteOrder(btn, userName, mealName) {
+    async function deleteOrder(btn, userName, mealName, keys) {
       Swal.fire({
         title: '確認刪除',
         html: `確定要刪除 ${userName} 的 ${mealName} 嗎？`,
@@ -235,57 +197,63 @@
         showCancelButton: true,
         confirmButtonText: '刪除',
         cancelButtonText: '取消'
-      }).then((result) => {
+      }).then(async (result) => {
         if (result.isConfirmed) {
           btn.disabled = true;
           btn.innerText = "刪除中...";
-
-          const payload = {
-            action: "deleteWebOrder",
-            groupId: groupId,
-            sessionId: sessionId,
-            userName: userName,
-            mealName: mealName,
-            type: orderType
-          };
-
-          fetch(`${GAS_WEB_APP_URL}?data=${encodeURIComponent(JSON.stringify(payload))}`, {
-            method: 'POST'
-          })
-          .then(res => res.json())
-          .then(resData => {
-            if (resData.status === "success") {
-              loadHistory();
-            } else {
-              Swal.fire({ icon: 'error', title: '刪除失敗：' + (resData.message || '') });
-              btn.disabled = false;
-              btn.innerText = "刪除";
+          try {
+            // 從 Firestore 中刪除指定的文檔 ID
+            for (let key of keys) {
+              await firebaseFetch(`Sessions/${groupId}_${sessionId}/Orders/${key}`, { method: 'DELETE' });
             }
-          })
-          .catch(err => {
+            Swal.fire({ icon: 'success', title: '已刪除！', timer: 800 });
+            loadHistory();
+          } catch (err) {
+            Swal.fire({ icon: 'error', title: '刪除失敗，請重試' });
             btn.disabled = false;
             btn.innerText = "刪除";
-            console.error("Delete order error: ", err);
-          });
+          }
         }
       });
     }
 
-    function loadHistory() {
-      const targetUrl = `${GAS_WEB_APP_URL}?action=get_orders_json&gid=${encodeURIComponent(groupId)}&sid=${encodeURIComponent(sessionId)}&type=${orderType}`;
-      
-      fetch(targetUrl)
-        .then(response => response.json())
-        .then(data => {
-          const body = document.getElementById('history-body');
-          body.innerHTML = data.length === 0 ? '<tr><td colspan="5">無資料</td></tr>' : data.map(r => `<tr>
-            <td>${r.user}</td><td>${r.meal}</td><td style="text-align:right;">${r.qty}</td><td style="text-align:right;">$${r.price * r.qty}</td>
-            <td><button class="btn-delete" onclick="deleteOrder(this, '${r.user}', '${r.meal}')">刪除</button></td>
-          </tr>`).join('');
-        })
-        .catch(err => {
-          console.error("Fetch history error: ", err);
+    async function loadHistory() {
+      const body = document.getElementById('history-body');
+      try {
+        // 從 Firestore 子集合載入訂單
+        const ordersList = await getCollection(`Sessions/${groupId}_${sessionId}/Orders`);
+        
+        const historyMap = {};
+        ordersList.forEach(o => {
+          const user = o.userName || o.user || "";
+          const meal = o.name || o.meal || "";
+          const price = Number(o.price || 0);
+          const type = o.type || "MEAL";
+          
+          if (type === 'MEAL') {
+            const key = `${user}|${meal}`;
+            if (!historyMap[key]) {
+              historyMap[key] = { user: user, meal: meal, price: price, qty: 1, keys: [o.id] };
+            } else {
+              historyMap[key].qty++;
+              historyMap[key].keys.push(o.id);
+            }
+          }
         });
+        
+        const aggregated = Object.values(historyMap).sort((a, b) => a.user.localeCompare(b.user) || a.meal.localeCompare(b.meal));
+        
+        body.innerHTML = aggregated.length === 0 ? '<tr><td colspan="5">無資料</td></tr>' : aggregated.map(r => `<tr>
+          <td>${r.user}</td>
+          <td>${r.meal}</td>
+          <td style="text-align:right;">${r.qty}</td>
+          <td style="text-align:right;">$${r.price * r.qty}</td>
+          <td><button class="btn-delete" onclick="deleteOrder(this, '${r.user}', '${r.meal}', ${JSON.stringify(r.keys)})">刪除</button></td>
+        </tr>`).join('');
+      } catch (err) {
+        console.error(err);
+        body.innerHTML = '<tr><td colspan="5">載入歷史紀錄失敗</td></tr>';
+      }
     }
   </script>
 </body>
