@@ -14,14 +14,13 @@
 <body>
     <div class="loader"></div>
     <script>
-        // 🚀 LINE LIFF ID
         const LIFF_ID = '2010205613-GBhWoaIf'; 
 
         async function init() {
-            // 設定 5 秒強制跳轉定時器 (Timeout 防止載入卡死)
+            // 設定 5 秒強制跳轉定時器 (Timeout)
             const timeoutPromise = new Promise((resolve) => {
                 setTimeout(() => {
-                    console.log('LIFF Timeout: Redirecting with default...');
+                    console.log('LIFF Timeout: Redirecting with default name...');
                     resolve({ isTimeout: true });
                 }, 5000);
             });
@@ -31,9 +30,7 @@
                 try {
                     await liff.init({ liffId: LIFF_ID });
                     if (!liff.isLoggedIn()) {
-                        // 💡 登入時使用乾淨、不帶參數的網址作為 redirectUri，避免驗證失敗
-                        const cleanLoginUri = window.location.origin + window.location.pathname;
-                        liff.login({ redirectUri: cleanLoginUri });
+                        liff.login({ redirectUri: window.location.href });
                         return { waitLogin: true };
                     }
 
@@ -60,19 +57,38 @@
 
             if (result && result.waitLogin) return; // 如果正在跳轉登入，則不執行後續
 
-            // 整理原本帶進來的所有網址參數（例如 shop, gid, sid 等）
             const urlParams = new URLSearchParams(window.location.search);
-            
-            // 寫入從 LINE LIFF 取得的使用者姓名
-            const finalName = (result && result.userName) ? result.userName : "";
+            const finalName = result.userName || "";
             urlParams.set('uName', finalName);
             
-            // ===================================================
-            // 🎯 最直接的測試：直接寫死絕對路徑跳轉到 order_ui.html
-            // ===================================================
-            const targetUrl = 'https://chailinhung.github.io/clhbot/order_ui.html?' + urlParams.toString();
+            // ==========================================
+            // 🎯 修改跳轉邏輯：跳轉至同目錄下的 GitHub 點餐頁面
+            // ==========================================
+            const type = (urlParams.get('type') || "").toUpperCase();
+            const pageFile = (type === 'DRINK') ? 'order_drink_ui.html' : 'order_ui.html';
 
-            console.log("Redirecting directly to: ", targetUrl);
+            // 自動解析並保留 GitHub 專案子目錄路徑（例如：/clhbot/）
+            const currentPath = window.location.pathname; 
+            let dirPath = "/";
+
+            const pathParts = currentPath.split('/').filter(p => p !== "");
+            if (pathParts.length > 0) {
+                // 如果最後一個節點含有 .html，則將其移除，剩下的就是目錄路徑
+                if (pathParts[pathParts.length - 1].includes('.html')) {
+                    pathParts.pop();
+                }
+                dirPath = "/" + pathParts.join('/') + "/";
+            }
+
+            // 若在根目錄運行，退回默認結構
+            if (dirPath === "//" || dirPath === "/") {
+                dirPath = "/clhbot/"; 
+            }
+
+            // 組合出與 index.html 相同根目錄的完整目標 URL
+            const targetUrl = window.location.origin + dirPath + pageFile + '?' + urlParams.toString();
+
+            console.log("Redirecting to target Github Page: ", targetUrl);
             window.location.replace(targetUrl);
         }
         window.onload = init;
