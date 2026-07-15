@@ -6,91 +6,86 @@
     <title>菜單載入中...</title>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <style>
-        body { font-family: -apple-system, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: #f4f7f9; }
+        body { font-family: -apple-system, sans-serif; display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; margin: 0; background: #f4f7f9; }
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid #06C755; border-radius: 50%; width: 45px; height: 45px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .error-msg { color: #d32f2f; margin-top: 15px; font-weight: bold; text-align: center; padding: 10px; display: none; }
     </style>
 </head>
 <body>
-    <div class="loader"></div>
+    <div class="loader" id="loader"></div>
+    <div class="error-msg" id="errorMsg"></div>
+
     <script>
+        // 🚀 請確保此與 LINE Developers 設定的 LIFF ID 一致
         const LIFF_ID = '2010205613-GBhWoaIf'; 
 
         async function init() {
-            // 設定 5 秒強制跳轉定時器 (Timeout)
-            const timeoutPromise = new Promise((resolve) => {
-                setTimeout(() => {
-                    console.log('LIFF Timeout: Redirecting with default name...');
-                    resolve({ isTimeout: true });
-                }, 5000);
-            });
+            const errorDiv = document.getElementById('errorMsg');
+            const loaderDiv = document.getElementById('loader');
 
-            // LIFF 處理邏輯
-            const liffPromise = (async () => {
-                try {
-                    await liff.init({ liffId: LIFF_ID });
-                    if (!liff.isLoggedIn()) {
-                        liff.login({ redirectUri: window.location.href });
-                        return { waitLogin: true };
-                    }
+            try {
+                // 1. 初始化 LIFF
+                await liff.init({ liffId: LIFF_ID });
 
-                    let userName = "";
-                    // 第一層：嘗試極速解碼 (ID Token)
-                    const idToken = liff.getDecodedIDToken();
-                    if (idToken && idToken.name) {
-                        userName = idToken.name;
-                    } else {
-                        // 第二層：連網抓取 (getProfile)
-                        const profile = await liff.getProfile();
-                        userName = profile.displayName;
-                    }
-                    return { userName: userName || "" };
-
-                } catch (e) {
-                    console.error('LIFF Error:', e);
-                    return { userName: "" };
+                // 2. 檢查是否登入
+                if (!liff.isLoggedIn()) {
+                    console.log("未登入，正在引導至 LINE 登入畫面...");
+                    // 登入時使用乾淨、不帶點餐參數的網址作為 redirectUri，避免驗證失敗
+                    const cleanLoginUri = window.location.origin + window.location.pathname;
+                    liff.login({ redirectUri: cleanLoginUri });
+                    return; // 停止後續執行，靜待跳轉
                 }
-            })();
 
-            // 競賽：看是 LIFF 先跑完還是 5 秒先到
-            const result = await Promise.race([liffPromise, timeoutPromise]);
+                // 3. 已登入，開始獲取名字
+                let userName = "";
+                const idToken = liff.getDecodedIDToken();
+                if (idToken && idToken.name) {
+                    userName = idToken.name;
+                } else {
+                    const profile = await liff.getProfile();
+                    userName = profile.displayName;
+                }
 
-            if (result && result.waitLogin) return; // 如果正在跳轉登入，則不執行後續
+                // 4. 成功拿到名字，進行跳轉
+                proceedToNextPage(userName);
 
+            } catch (e) {
+                console.error('LIFF Error:', e);
+                loaderDiv.style.display = 'none';
+                errorDiv.style.display = 'block';
+                errorDiv.innerHTML = `⚠️ LINE LIFF 初始化失敗！<br>錯誤訊息: ${e.message || e}<br><br>請確認此網址已登錄於 LINE Developer 後台的 Endpoint URL 與 Redirect URI 中。`;
+            }
+        }
+
+        function proceedToNextPage(userName) {
             const urlParams = new URLSearchParams(window.location.search);
-            const finalName = result.userName || "";
-            urlParams.set('uName', finalName);
-            
-            // ==========================================
-            // 🎯 修改跳轉邏輯：跳轉至同目錄下的 GitHub 點餐頁面
-            // ==========================================
+            urlParams.set('uName', userName || "");
+
+            // 解析同目錄下的點餐 UI 檔案 (order_ui.html 或 order_drink_ui.html)
             const type = (urlParams.get('type') || "").toUpperCase();
             const pageFile = (type === 'DRINK') ? 'order_drink_ui.html' : 'order_ui.html';
 
-            // 自動解析並保留 GitHub 專案子目錄路徑（例如：/clhbot/）
             const currentPath = window.location.pathname; 
             let dirPath = "/";
 
             const pathParts = currentPath.split('/').filter(p => p !== "");
             if (pathParts.length > 0) {
-                // 如果最後一個節點含有 .html，則將其移除，剩下的就是目錄路徑
                 if (pathParts[pathParts.length - 1].includes('.html')) {
                     pathParts.pop();
                 }
                 dirPath = "/" + pathParts.join('/') + "/";
             }
 
-            // 若在根目錄運行，退回默認結構
             if (dirPath === "//" || dirPath === "/") {
                 dirPath = "/clhbot/"; 
             }
 
-            // 組合出與 index.html 相同根目錄的完整目標 URL
             const targetUrl = window.location.origin + dirPath + pageFile + '?' + urlParams.toString();
-
-            console.log("Redirecting to target Github Page: ", targetUrl);
+            console.log("Redirecting to: ", targetUrl);
             window.location.replace(targetUrl);
         }
+
         window.onload = init;
     </script>
 </body>
