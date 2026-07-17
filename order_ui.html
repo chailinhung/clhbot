@@ -31,43 +31,12 @@
       box-sizing: border-box;
     }
     
-    /* 🎯 標題與產生報表按鈕同列排版 */
-    .title-bar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 6px;
-      border-bottom: 1px solid #f0f0f0;
-      padding-bottom: 4px;
-    }
-
+    /* 🎯 標題縮小 */
     h2 { 
       color: var(--primary); 
-      text-align: left; 
-      margin: 0; 
+      text-align: center; 
+      margin: 0 0 6px 0; 
       font-size: 1.1rem; /* 大幅縮小 */
-      flex: 1;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    /* 🎯 產生報表按鈕樣式 */
-    .btn-report {
-      background: #333;
-      color: white;
-      border: none;
-      padding: 3px 6px;
-      border-radius: 4px;
-      font-size: 0.75rem;
-      font-weight: 600;
-      cursor: pointer;
-      margin-left: 8px;
-      white-space: nowrap;
-      transition: background 0.2s;
-    }
-    .btn-report:active {
-      background: #555;
     }
     
     .input-group { 
@@ -218,102 +187,27 @@
       font-size: 0.95rem !important; 
       width: 90% !important; 
     }
-
-    /* 🎯 預設在網頁瀏覽時隱藏列印專用標題 */
-    .print-header {
-      display: none;
-    }
-
-    /* ========================================== */
-    /* 🎯 列印與報表匯出專用 CSS (@media print)       */
-    /* ========================================== */
-    @media print {
-      body {
-        background: white !important;
-        color: black !important;
-        font-size: 13px !important;
-        padding: 0 !important;
-      }
-      .card {
-        box-shadow: none !important;
-        padding: 0 !important;
-        margin: 0 !important;
-        border: none !important;
-        max-width: 100% !important;
-      }
-      /* 隱藏非必要元素：點餐欄位、按鈕、菜單 */
-      .no-print, 
-      .input-group, 
-      #menu-list, 
-      #submitBtn, 
-      .btn-submit, 
-      .btn-report,
-      .btn-delete, 
-      th:nth-child(5), 
-      td:nth-child(5) {
-        display: none !important;
-      }
-      /* 強化表格在紙張/PDF上的線條清晰度與滿版寬度 */
-      table {
-        width: 100% !important;
-        font-size: 12px !important;
-        margin-top: 10px !important;
-        border: 1.5px solid #000 !important;
-        table-layout: auto !important; /* 讓紙張寬度自動調整 */
-      }
-      th, td {
-        padding: 6px 4px !important;
-        border: 1px solid #aaa !important;
-        color: black !important;
-        white-space: normal !important; /* 品名與名字太長時自動換行，不裁切 */
-      }
-      /* 列印欄位比例微調 */
-      th:nth-child(1), td:nth-child(1) { width: 25% !important; }
-      th:nth-child(2), td:nth-child(2) { width: 50% !important; }
-      th:nth-child(3), td:nth-child(3) { width: 10% !important; }
-      th:nth-child(4), td:nth-child(4) { width: 15% !important; }
-
-      /* 顯示紙張最頂端精緻的報表大抬頭 */
-      .print-header {
-        display: block !important;
-        text-align: center;
-        font-size: 1.4rem;
-        font-weight: bold;
-        margin-bottom: 12px;
-        border-bottom: 2px solid #000;
-        padding-bottom: 6px;
-      }
-    }
   </style>
 </head>
 <body>
-
-  <!-- 🎯 只在列印/儲存PDF時顯示的大標題 -->
-  <div class="print-header" id="print-shop-title">團購訂餐報表</div>
-
   <div class="card">
-    <!-- 🎯 商店標題與「產生報表」按鈕同列最右邊 -->
-    <div class="title-bar no-print">
-      <h2 id="shop-title">🏪 載入中...</h2>
-      <button type="button" class="btn-report" onclick="generateReport()">產生報表</button>
-    </div>
-
-    <div class="input-group no-print">
+    <h2 id="shop-title">🏪 載入中...</h2>
+    <div class="input-group">
       <label>訂購人姓名： (訂購明細在最下方）</label>
       <input type="text" id="userName" value="" placeholder="請輸入名字" required>
     </div>
 
-    <div id="menu-list" class="no-print">
+    <div id="menu-list">
       <div style="text-align:center; padding:10px;">正在讀取菜單...</div>
     </div>
-    <div class="no-print" style="margin-top:8px; font-size: 1.1rem; font-weight: bold; color: #d32f2f; text-align: right;">總計：$<span id="total-price">0</span></div>
-    <button type="button" id="submitBtn" class="btn-submit no-print" onclick="submitForm()">送出訂單</button>
+    <div style="margin-top:8px; font-size: 1.1rem; font-weight: bold; color: #d32f2f; text-align: right;">總計：$<span id="total-price">0</span></div>
+    <button type="button" id="submitBtn" class="btn-submit" onclick="submitForm()">送出訂單</button>
   </div>
 
   <div class="card">
-    <h2 class="no-print" style="margin-bottom: 6px;">📊 目前訂單明細</h2>
+    <h2>📊 目前訂單明細</h2>
     <table>
-      <thead><tr><th>人名</th><th>餐點</th><th style="text-align:right;">數</th><th style="text-align:right;">金額</th><th class="no-print">操作</th></tr></thead>
+      <thead><tr><th>人名</th><th>餐點</th><th>數</th><th>金額</th><th>操作</th></tr></thead>
       <tbody id="history-body"><tr><td colspan="5">載入中...</td></tr></tbody>
     </table>
   </div>
@@ -339,11 +233,7 @@
       sessionId = urlParams.get('sid') || "";
       uName = urlParams.get('uName') || "";
 
-      if (shopName) {
-        document.getElementById('shop-title').innerText = "🏪 " + shopName;
-        // 🎯 同步設定「列印時」大標題
-        document.getElementById('print-shop-title').innerText = "📊 " + shopName + " - 訂餐統計報表";
-      }
+      if (shopName) document.getElementById('shop-title').innerText = "🏪 " + shopName;
       if (uName) document.getElementById('userName').value = uName;
       
       // 非同步向 GAS 索取菜單與歷史訂單資料
@@ -542,30 +432,10 @@
     // 🔔 7. 渲染歷史訂單表格的輔助函式
     function renderHistoryTable(data) {
       const body = document.getElementById('history-body');
-      body.innerHTML = data.length === 0 ? '<tr><td colspan="5" style="text-align:center;">無資料</td></tr>' : data.map(r => `<tr>
+      body.innerHTML = data.length === 0 ? '<tr><td colspan="5">無資料</td></tr>' : data.map(r => `<tr>
         <td>${r.user}</td><td>${r.meal}</td><td style="text-align:right;">${r.qty}</td><td style="text-align:right;">$${r.price * r.qty}</td>
-        <td class="no-print"><button class="btn-delete" onclick="deleteOrder(this, '${r.user}', '${r.meal}')">刪除</button></td>
+        <td><button class="btn-delete" onclick="deleteOrder(this, '${r.user}', '${r.meal}')">刪除</button></td>
       </tr>`).join('');
-    }
-
-    // ==========================================
-    // 🎯 點擊「產生報表」按鈕運行的邏輯
-    // ==========================================
-    function generateReport() {
-      const tableBody = document.getElementById('history-body').innerHTML;
-      
-      // 避免在無訂單或載入中狀態進行列印
-      if (tableBody.includes('載入中') || tableBody.includes('無資料')) {
-        Swal.fire({
-          icon: 'info',
-          title: '提示',
-          text: '目前沒有任何訂單明細，無法產生報表！'
-        });
-        return;
-      }
-      
-      // 直接拉出系統自帶的列印 / 存為 PDF 視窗
-      window.print();
     }
   </script>
 </body>
