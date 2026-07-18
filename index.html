@@ -25,7 +25,7 @@
 
         async function init() {
             // 設置 ｘ 秒超時防止 LIFF 載入卡死
-            const timeoutPromise = new Promise(resolve => setTimeout(() => resolve({ userName: "" }), 8000));
+            const timeoutPromise = new Promise(resolve => setTimeout(() => resolve({ userName: "" }), 5000));
 
             const liffPromise = (async () => {
                 try {
