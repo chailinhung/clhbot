@@ -24,8 +24,8 @@
         const GITHUB_PAGES_BASE = 'https://chailinhung.github.io/clhbot';
 
         async function init() {
-            // 設置 5 秒超時防止 LIFF 載入卡死
-            const timeoutPromise = new Promise(resolve => setTimeout(() => resolve({ userName: "" }), 5000));
+            // 設置 ｘ 秒超時防止 LIFF 載入卡死
+            const timeoutPromise = new Promise(resolve => setTimeout(() => resolve({ userName: "" }), ３000));
 
             const liffPromise = (async () => {
                 try {
@@ -53,7 +53,7 @@
                 }
             })();
 
-            // 競賽：看是 LIFF 先跑完還是 5 秒先到
+            // 競賽：看是 LIFF 先跑完還是 ｘ 秒先到
             const result = await Promise.race([liffPromise, timeoutPromise]);
 
             if (result && result.waitLogin) return; // 如果正在跳轉登入，則不執行後續
