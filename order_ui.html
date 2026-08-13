@@ -224,6 +224,7 @@
     let uName = "";
     let globalMenu = [];
     let quantities = [];
+    let globalHistory = [];
 
     window.onload = async function() {
       // 解析網址參數：例如 ?shop=麥當勞&gid=123&sid=456&uName=王小明
@@ -355,10 +356,25 @@
 
             if (resData.status === 'success') {
               Swal.fire({ icon: 'success', title: '送出成功！', timer: 1000 });
+              
+              // ⚡ 1. 前端樂觀更新：立刻將新點餐加入畫面明細，不需等待後端連線
+              orderData.forEach(item => {
+                const existing = globalHistory.find(h => h.user === name && h.meal === item.name);
+                if (existing) {
+                  existing.qty += item.qty;
+                } else {
+                  globalHistory.push({ user: name, meal: item.name, price: item.price, qty: item.qty });
+                }
+              });
+              globalHistory.sort((a, b) => a.user.localeCompare(b.user) || a.meal.localeCompare(b.meal));
+              renderHistoryTable(globalHistory);
+
               quantities.fill(0); 
               globalMenu.forEach((_, i) => document.getElementById('qty-'+i).innerText='0'); 
               updateTotal();
-              loadHistory(); // 重新整理明細
+
+              // ⚡ 2. 背景同步最新正式明細
+              loadHistory();
             } else {
               throw new Error(resData.message || '點餐失敗');
             }
@@ -405,6 +421,9 @@
             const resData = await response.json();
 
             if (resData.status === 'success') {
+              // ⚡ 前端樂觀刪除
+              globalHistory = globalHistory.filter(h => !(h.user === userName && h.meal === mealName));
+              renderHistoryTable(globalHistory);
               loadHistory();
             } else {
               throw new Error('刪除失敗');
@@ -431,8 +450,9 @@
 
     // 🔔 7. 渲染歷史訂單表格的輔助函式
     function renderHistoryTable(data) {
+      globalHistory = data || [];
       const body = document.getElementById('history-body');
-      body.innerHTML = data.length === 0 ? '<tr><td colspan="5">無資料</td></tr>' : data.map(r => `<tr>
+      body.innerHTML = globalHistory.length === 0 ? '<tr><td colspan="5">無資料</td></tr>' : globalHistory.map(r => `<tr>
         <td>${r.user}</td><td>${r.meal}</td><td style="text-align:right;">${r.qty}</td><td style="text-align:right;">$${r.price * r.qty}</td>
         <td><button class="btn-delete" onclick="deleteOrder(this, '${r.user}', '${r.meal}')">刪除</button></td>
       </tr>`).join('');
