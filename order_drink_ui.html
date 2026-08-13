@@ -468,7 +468,7 @@
             }
           } catch (error) {
             console.error('送出訂單錯誤:', error);
-            Swal.fire({ icon: 'error', title: '送出失敗，請再試一次' });
+            Swal.fire({ icon: 'error', title: '關閉訂餐網頁再進來看訂單是否已送出！' });
           } finally {
             btn.disabled = false;
             btn.innerText = originalText;
