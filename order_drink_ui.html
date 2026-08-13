@@ -309,6 +309,7 @@
     let currentItemIndex = -1;
     let selectedSugar = "半糖";
     let selectedIce = "微冰";
+    let globalHistory = [];
 
     window.onload = async function() {
       // 解析網址參數
@@ -449,6 +450,18 @@
             if (resData.status === 'success') {
               Swal.fire({ icon: 'success', title: '訂單已送出！', timer: 800 });
               closeModal(); 
+              
+              // ⚡ 1. 前端樂觀更新：立刻加入明細
+              const existing = globalHistory.find(h => h.user === userName && h.meal === fullMealName);
+              if (existing) {
+                existing.qty += 1;
+              } else {
+                globalHistory.push({ user: userName, meal: fullMealName, price: globalMenu[currentItemIndex].price, qty: 1 });
+              }
+              globalHistory.sort((a, b) => a.user.localeCompare(b.user) || a.meal.localeCompare(b.meal));
+              renderHistoryTable(globalHistory);
+
+              // ⚡ 2. 背景同步正式明細
               loadHistory();
             } else {
               throw new Error(resData.message || '點餐失敗');
@@ -499,6 +512,9 @@
             const resData = await response.json();
 
             if (resData.status === 'success') {
+              // ⚡ 樂觀刪除
+              globalHistory = globalHistory.filter(h => !(h.user === userName && h.meal === mealName));
+              renderHistoryTable(globalHistory);
               loadHistory();
             } else {
               throw new Error('刪除失敗');
@@ -525,8 +541,9 @@
 
     // 🔔 7. 渲染歷史訂單表格的輔助函式
     function renderHistoryTable(data) {
+      globalHistory = data || [];
       const body = document.getElementById('history-body');
-      body.innerHTML = data.length === 0 ? '<tr><td colspan="5">無資料</td></tr>' : data.map(r => `<tr>
+      body.innerHTML = globalHistory.length === 0 ? '<tr><td colspan="5">無資料</td></tr>' : globalHistory.map(r => `<tr>
         <td>${r.user}</td><td>${r.meal}</td><td style="text-align:right;">${r.qty}</td><td style="text-align:right;">$${r.price * r.qty}</td>
         <td><button class="btn-delete" onclick="deleteOrder(this, '${r.user}', '${r.meal}')">刪除</button></td>
       </tr>`).join('');
